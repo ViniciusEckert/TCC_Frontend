@@ -37,9 +37,9 @@ export default function BancoLanding() {
 
           {/* MENU */}
           <div className="hidden md:flex gap-8 text-sm">
-            <a href="#" className="text-gray-300 hover:text-red-400">Sobre</a>
-            <a href="#" className="text-gray-300 hover:text-red-400">Serviços</a>
-            <a href="#" className="text-gray-300 hover:text-red-400">Segurança</a>
+            <a href="/sobre" className="text-gray-300 hover:text-red-400">Sobre</a>
+            <a href="/servicos" className="text-gray-300 hover:text-red-400">Serviços</a>
+            <a href="/seguranca" className="text-gray-300 hover:text-red-400">Segurança</a>
           </div>
 
           {/* CTA */}
