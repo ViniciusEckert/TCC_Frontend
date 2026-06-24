@@ -1,64 +1,70 @@
-'use server';
+"use server";
 
-import { redirect } from 'next/navigation';
+import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
 
-export interface LoginPayload {
-  cpf: string;   // apenas dígitos, ex: "01234567890"
-  senha: string;
-}
+export async function loginAction(cpf: string, password: string) {
+  let tipo: "cliente" | "funcionario" | null = null;
+  let accessToken: string | null = null;
 
-export interface LoginResult {
-  success: boolean;
-  message?: string;
-}
+  try {
+    let response = await fetch("http://localhost:8080/funcionarios/login", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        cpf,
+        senha: password,
+      }),
+    });
 
-export async function loginAction(payload: LoginPayload): Promise<LoginResult> {
-  const { cpf, senha } = payload;
+    if (response.ok) {
+      const data = await response.json();
+      tipo = "funcionario";
+      accessToken = data.access_token;
+    } else {
+      response = await fetch("http://localhost:8080/clientes/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          cpf,
+          senha: password,
+        }),
+      });
 
-  // ── Validação básica ─────────────────────────────────────────────────────────
-  if (!cpf || cpf.length !== 11) {
-    return { success: false, message: 'CPF inválido.' };
+      if (response.ok) {
+        const data = await response.json();
+        tipo = "cliente";
+        accessToken = data.access_token;
+      }
+    }
+  } catch (error) {
+    console.error("Erro no login:", error);
+
+    return {
+      success: false,
+      message: "Erro interno do servidor.",
+    };
   }
 
-  if (!senha || senha.length < 6) {
-    return { success: false, message: 'Senha deve ter ao menos 6 caracteres.' };
+  if (!tipo || !accessToken) {
+    return {
+      success: false,
+      message: "CPF ou senha inválidos.",
+    };
   }
 
-  // ── Chamada à API / banco de dados ───────────────────────────────────────────
-  // Substitua pelo seu serviço real de autenticação.
-  // Exemplo com fetch para uma API REST interna:
-  //
-  // const res = await fetch(`${process.env.API_URL}/auth/login`, {
-  //   method: 'POST',
-  //   headers: { 'Content-Type': 'application/json' },
-  //   body: JSON.stringify({ cpf, senha }),
-  //   cache: 'no-store',
-  // });
-  //
-  // if (!res.ok) {
-  //   const body = await res.json().catch(() => ({}));
-  //   return { success: false, message: body?.message ?? 'CPF ou senha incorretos.' };
-  // }
-  //
-  // const { token } = await res.json();
-  //
-  // ── Persistência da sessão ───────────────────────────────────────────────────
-  // Exemplo com next-auth, iron-session, ou cookies:
-  //
-  // (await cookies()).set('session', token, {
-  //   httpOnly: true,
-  //   secure: process.env.NODE_ENV === 'production',
-  //   sameSite: 'strict',
-  //   path: '/',
-  //   maxAge: 60 * 60 * 8, // 8 horas
-  // });
+  const cookieStore = await cookies();
 
-  // ── Simulação para desenvolvimento ──────────────────────────────────────────
-  // Remova este bloco quando integrar o serviço real.
-  if (cpf === '00000000000' && senha === 'senha123') {
-    // Simula sucesso → redireciona para o dashboard
-    redirect('/dashboard');
+  cookieStore.set("access_token", accessToken);
+  cookieStore.set("user_type", tipo);
+
+  if (tipo === "funcionario") {
+    redirect("/dashboard/funcionario");
   }
 
-  return { success: false, message: 'CPF ou senha incorretos.' };
+  redirect("/dashboard/cliente");
 }

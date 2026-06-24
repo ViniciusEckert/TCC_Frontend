@@ -45,7 +45,7 @@ const timeline = [
   {
     year: '2014',
     title: 'Fundação',
-    description: 'O FinanceBank é fundado com a missão de revolucionar o banking digital no Brasil.',
+    description: 'O ForjaBank é fundado com a missão de revolucionar o banking digital no Brasil.',
   },
   {
     year: '2016',
@@ -114,7 +114,7 @@ export default function SobreNosPage() {
           <div className="w-10 h-10 bg-linear-to-br from-red-500 to-red-700 rounded-lg flex items-center justify-center">
             <Shield className="text-white w-6 h-6" />
           </div>
-          <span className="text-white font-bold text-xl">FinanceBank</span>
+          <span className="text-white font-bold text-xl">ForjaBank</span>
         </Link>
 
         <div className="flex items-center gap-4">
@@ -142,7 +142,7 @@ export default function SobreNosPage() {
               <Globe className="text-red-400 w-8 h-8" />
             </div>
             <h1 className="text-4xl md:text-5xl font-bold text-white">
-              Sobre o <span className="bg-linear-to-r from-red-400 to-pink-400 bg-clip-text text-transparent">FinanceBank</span>
+              Sobre o <span className="bg-linear-to-r from-red-400 to-pink-400 bg-clip-text text-transparent">ForjaBank</span>
             </h1>
             <p className="text-gray-400 text-lg md:text-xl max-w-2xl mx-auto">
               Somos um banco digital que acredita que a tecnologia deve servir as pessoas. Há mais de 10 anos, transformamos vidas através de finanças mais acessíveis e seguras.
@@ -367,7 +367,7 @@ export default function SobreNosPage() {
                 Faça Parte da Nossa História
               </h2>
               <p className="text-gray-300 mb-8 max-w-2xl mx-auto">
-                Junte-se a centenas de milhares de pessoas que já confiam no FinanceBank para suas necessidades financeiras.
+                Junte-se a centenas de milhares de pessoas que já confiam no ForjaBank para suas necessidades financeiras.
               </p>
 
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -399,7 +399,7 @@ export default function SobreNosPage() {
                   <div className="w-10 h-10 bg-linear-to-br from-red-500 to-red-700 rounded-lg flex items-center justify-center">
                     <Shield className="text-white w-6 h-6" />
                   </div>
-                  <span className="text-white font-bold">FinanceBank</span>
+                  <span className="text-white font-bold">ForjaBank</span>
                 </div>
                 <p className="text-gray-400 text-sm">Seu banco digital inovador e confiável</p>
               </div>
@@ -425,7 +425,7 @@ export default function SobreNosPage() {
             </div>
 
             <div className="border-t border-red-500/10 pt-8 text-center text-gray-500 text-sm">
-              <p>© 2024 FinanceBank. Todos os direitos reservados. | Inovação · Confiança · Crescimento</p>
+              <p>© 2024 ForjaBank. Todos os direitos reservados. | Inovação · Confiança · Crescimento</p>
             </div>
           </div>
         </footer>

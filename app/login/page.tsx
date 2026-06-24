@@ -35,15 +35,17 @@ export default function LoginPage() {
 
     setLoading(true);
     try {
-      const result = await loginAction({
-        cpf: form.cpf.replace(/\D/g, ''),
-        senha: form.senha,
-      });
+      const result = await loginAction(
+        form.cpf.replace(/\D/g, ''),
+        form.senha
+      );
 
       if (!result.success) {
-        setError(result.message ?? 'Erro ao autenticar. Tente novamente.');
+        setError(result.message);
+        return;
       }
-      // Se success === true, o redirect ocorre dentro da action
+
+
     } catch {
       setError('Serviço indisponível. Tente novamente em instantes.');
     } finally {
@@ -70,7 +72,7 @@ export default function LoginPage() {
         </Link>
 
         <a
-          href="/cadastro"
+          href="/clientes/cadastro"
           className="text-sm text-gray-300 hover:text-red-400 flex items-center gap-1 transition"
         >
           Não tem conta? Cadastre-se <ChevronRight size={14} />

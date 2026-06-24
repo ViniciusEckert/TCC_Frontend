@@ -101,7 +101,7 @@ export default function ServicosPage() {
           <div className="w-10 h-10 bg-linear-to-br from-red-500 to-red-700 rounded-lg flex items-center justify-center">
             <Shield className="text-white w-6 h-6" />
           </div>
-          <span className="text-white font-bold text-xl">FinanceBank</span>
+          <span className="text-white font-bold text-xl">ForjaBank</span>
         </Link>
 
         <div className="flex items-center gap-4">
@@ -132,7 +132,7 @@ export default function ServicosPage() {
               Serviços Pensados para <span className="bg-linear-to-r from-red-400 to-pink-400 bg-clip-text text-transparent">Você</span>
             </h1>
             <p className="text-gray-400 text-lg md:text-xl max-w-2xl mx-auto">
-              Conheça toda a gama de produtos e serviços que o FinanceBank oferece para facilitar sua vida financeira.
+              Conheça toda a gama de produtos e serviços que o ForjaBank oferece para facilitar sua vida financeira.
             </p>
           </div>
         </section>

@@ -44,7 +44,7 @@ export default function BancoLanding() {
 
           {/* CTA */}
           <a
-            href="/cadastro"
+            href="/clientes/cadastro"
             className="px-6 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg flex items-center gap-2 transition"
           >
             Cadastrar <ChevronRight size={16} />

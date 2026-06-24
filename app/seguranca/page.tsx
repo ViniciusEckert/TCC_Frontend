@@ -72,7 +72,7 @@ const bestPractices = [
   {
     icon: AlertTriangle,
     title: 'Não compartilhe sua senha',
-    description: 'O FinanceBank nunca pedirá sua senha por email, telefone ou mensagem.',
+    description: 'O ForjaBank nunca pedirá sua senha por email, telefone ou mensagem.',
   },
   {
     icon: CheckCircle,
@@ -82,12 +82,12 @@ const bestPractices = [
   {
     icon: Zap,
     title: 'Atualize seu app',
-    description: 'Mantenha o app do FinanceBank sempre atualizado para as versões mais recentes.',
+    description: 'Mantenha o app do ForjaBank sempre atualizado para as versões mais recentes.',
   },
   {
     icon: Eye,
     title: 'Verifique URLs',
-    description: 'Sempre acesse o FinanceBank através de financebank.com.br ou do app oficial.',
+    description: 'Sempre acesse o ForjaBank através de forjabank.com.br ou do app oficial.',
   },
   {
     icon: Lock,
@@ -125,7 +125,7 @@ export default function SegurancaPage() {
           <div className="w-10 h-10 bg-linear-to-br from-red-500 to-red-700 rounded-lg flex items-center justify-center">
             <Shield className="text-white w-6 h-6" />
           </div>
-          <span className="text-white font-bold text-xl">FinanceBank</span>
+          <span className="text-white font-bold text-xl">ForjaBank</span>
         </Link>
 
         <div className="flex items-center gap-4">
@@ -156,7 +156,7 @@ export default function SegurancaPage() {
               Sua <span className="bg-linear-to-r from-red-400 to-pink-400 bg-clip-text text-transparent">Segurança</span> é Nossa Prioridade
             </h1>
             <p className="text-gray-400 text-lg md:text-xl max-w-2xl mx-auto">
-              No FinanceBank, protegemos seus dados com tecnologia de ponta e protocolos de segurança internacionais. Confie em nossa expertise.
+              No ForjaBank, protegemos seus dados com tecnologia de ponta e protocolos de segurança internacionais. Confie em nossa expertise.
             </p>
           </div>
         </section>
@@ -243,7 +243,7 @@ export default function SegurancaPage() {
           <div className="max-w-4xl mx-auto">
             <h2 className="text-3xl font-bold text-white mb-4 text-center">Certificações e Conformidade</h2>
             <p className="text-gray-400 text-center mb-12">
-              O FinanceBank é certificado e segue rigorosamente padrões internacionais de segurança:
+              O ForjaBank é certificado e segue rigorosamente padrões internacionais de segurança:
             </p>
 
             <div className="bg-linear-to-r from-red-500/10 to-pink-500/10 border border-red-500/20 rounded-2xl p-8">
@@ -271,7 +271,7 @@ export default function SegurancaPage() {
                   a: 'Sim, você tem múltiplas camadas de proteção. A biometria é vinculada ao seu dispositivo, e mesmo com acesso ao telefone, seria necessário a sua biometria. Além disso, qualquer acesso suspeito é bloqueado automaticamente.',
                 },
                 {
-                  q: 'O FinanceBank rastreia meus dados de localização?',
+                  q: 'O ForjaBank rastreia meus dados de localização?',
                   a: 'Usamos localização apenas para segurança (detecção de fraude). Você controla quais permissões o app pode acessar. Nunca compartilhamos sua localização com terceiros.',
                 },
                 {
@@ -306,7 +306,7 @@ export default function SegurancaPage() {
                 Segurança Confiável e Comprovada
               </h2>
               <p className="text-gray-300 mb-8 max-w-2xl mx-auto">
-                Abra sua conta no FinanceBank e aproveite a segurança de ponta que você merece. Seus dados estão em boas mãos.
+                Abra sua conta no ForjaBank e aproveite a segurança de ponta que você merece. Seus dados estão em boas mãos.
               </p>
 
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -337,7 +337,7 @@ export default function SegurancaPage() {
                   <div className="w-10 h-10 bg-linear-to-br from-red-500 to-red-700 rounded-lg flex items-center justify-center">
                     <Shield className="text-white w-6 h-6" />
                   </div>
-                  <span className="text-white font-bold">FinanceBank</span>
+                  <span className="text-white font-bold">ForjaBank</span>
                 </div>
                 <p className="text-gray-400 text-sm">Seu banco digital seguro e confiável</p>
               </div>
@@ -363,7 +363,7 @@ export default function SegurancaPage() {
             </div>
 
             <div className="border-t border-red-500/10 pt-8 text-center text-gray-500 text-sm">
-              <p>© 2024 FinanceBank. Todos os direitos reservados. | Segurança 24/7 · Privacidade Garantida · LGPD Compliant</p>
+              <p>© 2024 ForjaBank. Todos os direitos reservados. | Segurança 24/7 · Privacidade Garantida · LGPD Compliant</p>
             </div>
           </div>
         </footer>
