@@ -3,36 +3,36 @@
 import Link from "next/link";
 import React, { useState } from 'react';
 import { Shield, Eye, EyeOff, ChevronRight, AlertCircle, Loader2, CreditCard } from 'lucide-react';
-import { createCliente } from './actions';
-import { useRouter } from "next/navigation";
+import { createConta } from './actions';
+import { useRouter, useParams } from "next/navigation";
 
 type TipoConta = 'CORRENTE' | 'POUPANÇA' | 'UNIVERSITARIA' | 'SALARIO';
 
 const TIPOS_CONTA: { value: TipoConta; label: string; desc: string }[] = [
-  { value: 'CORRENTE',     label: 'Conta Corrente',     desc: 'Para o dia a dia, transferências e pagamentos' },
-  { value: 'POUPANÇA',     label: 'Conta Poupança',     desc: 'Rendimento mensal com liquidez imediata' },
-  { value: 'UNIVERSITARIA',label: 'Conta Universitária', desc: 'Benefícios exclusivos para estudantes' },
-  { value: 'SALARIO',      label: 'Conta Salário',      desc: 'Receba seu salário sem tarifas' },
+  { value: 'CORRENTE',      label: 'Conta Corrente',      desc: 'Para o dia a dia, transferências e pagamentos' },
+  { value: 'POUPANÇA',      label: 'Conta Poupança',      desc: 'Rendimento mensal com liquidez imediata' },
+  { value: 'UNIVERSITARIA', label: 'Conta Universitária', desc: 'Benefícios exclusivos para estudantes' },
+  { value: 'SALARIO',       label: 'Conta Salário',       desc: 'Receba seu salário sem tarifas' },
 ];
 
 export default function CadastroContaPage() {
   const [showPassword, setShowPassword] = useState(false);
-  const [loading, setLoading]           = useState(false);
-  const [error, setError]               = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const router = useRouter();
+  const params = useParams();
+  const clienteId = Number(params.id);
 
   const [form, setForm] = useState({
-    tipo_conta:     '' as TipoConta | '',
-    saldo:          '',
-    data_abertura:  '',
-    senha:          '',
+    tipo_conta:    '' as TipoConta | '',
+    saldo:         '',
+    data_abertura: '',
+    senha:         '',
   });
 
   function validateForm() {
-    if (!form.tipo_conta)    return 'Selecione o tipo de conta.';
-    if (form.saldo === '')   return 'Informe o saldo inicial.';
+    if (!form.tipo_conta) return 'Selecione o tipo de conta.';
     if (Number(form.saldo) < 0) return 'O saldo não pode ser negativo.';
-    if (!form.data_abertura) return 'Informe a data de abertura.';
     if (form.senha.length < 6) return 'A senha deve ter no mínimo 6 caracteres.';
     return null;
   }
@@ -46,15 +46,19 @@ export default function CadastroContaPage() {
 
     setLoading(true);
     try {
-      await createCliente({
-        id:            '', // preenchido pelo backend ou via cookie/session
+      const conta = await createConta(clienteId, {
         senha:         form.senha,
         tipo_conta:    form.tipo_conta as TipoConta,
         saldo:         Number(form.saldo),
-        data_abertura: new Date(form.data_abertura),
+        data_abertura: form.data_abertura,
       });
 
-      router.push('/dashboard');
+      if (!conta) {
+        setError('Não foi possível abrir a conta. Tente novamente.');
+        return;
+      }
+
+      router.push(`/clientes/${clienteId}/dashboard`);
     } catch {
       setError('Serviço indisponível. Tente novamente em instantes.');
     } finally {
@@ -133,46 +137,11 @@ export default function CadastroContaPage() {
                   <ChevronRight size={16} className="absolute right-4 top-1/2 -translate-y-1/2 rotate-90 text-gray-500 pointer-events-none" />
                 </div>
 
-                {/* Descrição dinâmica do tipo selecionado */}
                 {form.tipo_conta && (
                   <p className="text-xs text-gray-500 pl-1">
                     {TIPOS_CONTA.find(t => t.value === form.tipo_conta)?.desc}
                   </p>
                 )}
-              </div>
-
-              {/* SALDO e DATA */}
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-1.5">
-                  <label htmlFor="saldo" className="block text-sm text-gray-300">
-                    Saldo Inicial (R$)
-                  </label>
-                  <input
-                    id="saldo"
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    placeholder="0,00"
-                    value={form.saldo}
-                    onChange={e => setForm(f => ({ ...f, saldo: e.target.value }))}
-                    disabled={loading}
-                    className="w-full px-4 py-3 bg-red-950/60 border border-red-500/20 rounded-xl text-white placeholder-gray-600 focus:outline-none focus:border-red-500/60 focus:ring-1 focus:ring-red-500/40 transition disabled:opacity-50"
-                  />
-                </div>
-
-                <div className="space-y-1.5">
-                  <label htmlFor="data_abertura" className="block text-sm text-gray-300">
-                    Data de Abertura
-                  </label>
-                  <input
-                    id="data_abertura"
-                    type="date"
-                    value={form.data_abertura}
-                    onChange={e => setForm(f => ({ ...f, data_abertura: e.target.value }))}
-                    disabled={loading}
-                    className="w-full px-4 py-3 bg-red-950/60 border border-red-500/20 rounded-xl text-white focus:outline-none focus:border-red-500/60 focus:ring-1 focus:ring-red-500/40 transition disabled:opacity-50"
-                  />
-                </div>
               </div>
 
               {/* SENHA */}

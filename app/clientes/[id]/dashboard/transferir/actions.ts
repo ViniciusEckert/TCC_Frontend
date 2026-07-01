@@ -2,6 +2,15 @@
 
 import { cookies } from 'next/headers';
 
+export interface Conta {
+  id: number;
+  numero: string;
+  tipo_conta: string;
+  saldo: number;
+  data_abertura: string;
+  [key: string]: unknown;
+}
+
 interface DadosTransferencia {
   contaOrigemId: number;
   contaDestinoId: number;
@@ -14,13 +23,6 @@ interface ResultadoTransferencia {
   mensagem: string;
   dados?: unknown;
   erro?: string;
-}
-
-interface Conta {
-  id: number;
-  numero: string;
-  saldo: number;
-  [key: string]: unknown;
 }
 
 interface ClienteData {
@@ -162,7 +164,7 @@ export async function buscarContas(clienteId: number) {
     }
 
     const clienteData = parsedData.dados ?? parsedData;
-    const contas = isClienteData(clienteData) 
+    const contas = isClienteData(clienteData)
       ? (clienteData.contas ?? parsedData.contas ?? [])
       : (parsedData.contas ?? []);
 

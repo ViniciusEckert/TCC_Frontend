@@ -4,7 +4,6 @@ import React, { useState, useEffect } from 'react';
 import {
   Shield,
   LogOut,
-  Send,
   ArrowLeft,
   AlertCircle,
   CheckCircle,
@@ -14,14 +13,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter, useParams } from 'next/navigation';
-import { realizarTransferencia, buscarContas }  from "./actions"
-
-interface Contam {
-  id: number;
-  tipo_conta: string;
-  saldo: number;
-  data_abertura: string;
-}
+import { realizarTransferencia, buscarContas, type Conta } from './actions';
 
 export default function TransferirPage() {
   const router = useRouter();
@@ -32,7 +24,7 @@ export default function TransferirPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
-  const [contas, setContas] = useState<Contam[]>([]);
+  const [contas, setContas] = useState<Conta[]>([]);
   const [contasCarregando, setContasCarregando] = useState(true);
 
   const [formData, setFormData] = useState({
@@ -42,7 +34,6 @@ export default function TransferirPage() {
     descricao: '',
   });
 
-  // Buscar contas do cliente ao carregar
   useEffect(() => {
     const carregarContas = async () => {
       try {
@@ -56,9 +47,9 @@ export default function TransferirPage() {
             }));
           }
         } else {
-          setError(resultado.erro);
+          setError(resultado.erro || 'Erro ao carregar contas');
         }
-      } catch (err) {
+      } catch {
         setError('Erro ao carregar contas');
       } finally {
         setContasCarregando(false);
@@ -80,7 +71,7 @@ export default function TransferirPage() {
     }));
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     if (step === 1) {
@@ -146,7 +137,7 @@ export default function TransferirPage() {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('token');
+    localStorage.removeItem('access_token');
     localStorage.removeItem('clienteId');
     router.push('/login');
   };
@@ -160,13 +151,11 @@ export default function TransferirPage() {
 
   return (
     <div className="min-h-screen bg-linear-to-b from-red-950 via-red-900 to-black">
-      {/* BACKGROUND BLOBS */}
       <div className="fixed inset-0 pointer-events-none">
         <div className="absolute w-96 h-96 bg-linear-to-br from-red-500/10 to-pink-500/10 rounded-full blur-3xl top-[10%] left-[5%] animate-pulse" />
         <div className="absolute w-96 h-96 bg-linear-to-br from-pink-500/10 to-red-500/10 rounded-full blur-3xl bottom-[20%] right-[5%] animate-pulse" />
       </div>
 
-      {/* NAV */}
       <nav className="relative z-10 w-full px-6 py-4 flex justify-between items-center bg-red-950/60 backdrop-blur border-b border-red-500/10">
         <Link href="/" className="flex items-center gap-2">
           <div className="w-10 h-10 bg-linear-to-br from-red-500 to-red-700 rounded-lg flex items-center justify-center">
@@ -193,10 +182,8 @@ export default function TransferirPage() {
         </div>
       </nav>
 
-      {/* MAIN */}
       <main className="relative z-10 px-6 py-8">
         <div className="max-w-2xl mx-auto">
-          {/* HEADER */}
           <div className="flex items-center gap-4 mb-8">
             <button
               onClick={() => {
@@ -219,7 +206,6 @@ export default function TransferirPage() {
             </div>
           </div>
 
-          {/* PROGRESS */}
           <div className="flex gap-4 mb-8">
             {[1, 2].map((num) => (
               <div
@@ -231,7 +217,6 @@ export default function TransferirPage() {
             ))}
           </div>
 
-          {/* SUCCESS STATE */}
           {success && (
             <div className="bg-green-900/30 border border-green-500/30 rounded-2xl p-8 text-center mb-8">
               <CheckCircle className="w-16 h-16 text-green-400 mx-auto mb-4" />
@@ -244,10 +229,9 @@ export default function TransferirPage() {
             </div>
           )}
 
-          {/* ERROR STATE */}
           {error && (
             <div className="bg-red-900/30 border border-red-500/30 rounded-2xl p-4 mb-8 flex gap-3">
-              <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
+              <AlertCircle className="w-5 h-5 text-red-400 shrink-0 mt-0.5" />
               <p className="text-red-300">{error}</p>
             </div>
           )}
@@ -270,7 +254,6 @@ export default function TransferirPage() {
                 <>
                   {step === 1 && (
                     <>
-                      {/* CONTA ORIGEM */}
                       <div className="bg-red-900/20 border border-red-500/10 rounded-2xl p-6 backdrop-blur-sm">
                         <label className="block text-white font-bold mb-3">
                           Conta de Origem
@@ -294,11 +277,12 @@ export default function TransferirPage() {
                         </select>
                       </div>
 
-                      {/* SALDO DISPONÍVEL */}
                       {contaOrigemSelecionada && (
                         <div className="bg-blue-500/10 border border-blue-500/30 rounded-xl p-4">
                           <div className="flex items-center justify-between">
-                            <span className="text-blue-300">Saldo disponível:</span>
+                            <span className="text-blue-300">
+                              Saldo disponível:
+                            </span>
                             <span className="font-bold text-blue-300">
                               R${' '}
                               {contaOrigemSelecionada.saldo.toLocaleString(
@@ -313,7 +297,6 @@ export default function TransferirPage() {
                         </div>
                       )}
 
-                      {/* CONTA DESTINO */}
                       <div className="bg-red-900/20 border border-red-500/10 rounded-2xl p-6 backdrop-blur-sm">
                         <label className="block text-white font-bold mb-3">
                           Conta de Destino
@@ -346,7 +329,6 @@ export default function TransferirPage() {
 
                   {step === 2 && (
                     <>
-                      {/* RESUMO ORIGEM */}
                       <div className="bg-red-900/20 border border-red-500/10 rounded-2xl p-6 backdrop-blur-sm">
                         <h3 className="text-white font-bold mb-4">
                           De (Origem)
@@ -374,7 +356,6 @@ export default function TransferirPage() {
                         </div>
                       </div>
 
-                      {/* RESUMO DESTINO */}
                       <div className="bg-red-900/20 border border-red-500/10 rounded-2xl p-6 backdrop-blur-sm">
                         <h3 className="text-white font-bold mb-4">
                           Para (Destino)
@@ -402,7 +383,6 @@ export default function TransferirPage() {
                         </div>
                       </div>
 
-                      {/* VALOR */}
                       <div className="bg-red-900/20 border border-red-500/10 rounded-2xl p-6 backdrop-blur-sm">
                         <label className="block text-white font-bold mb-3">
                           Valor
@@ -424,7 +404,6 @@ export default function TransferirPage() {
                         </div>
                       </div>
 
-                      {/* DESCRIÇÃO */}
                       <div className="bg-red-900/20 border border-red-500/10 rounded-2xl p-6 backdrop-blur-sm">
                         <label className="block text-white font-bold mb-3">
                           Descrição (opcional)
@@ -441,7 +420,6 @@ export default function TransferirPage() {
                     </>
                   )}
 
-                  {/* BUTTON */}
                   <button
                     type="submit"
                     disabled={loading}

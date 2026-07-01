@@ -296,6 +296,8 @@ export default function DashboardPage() {
           <div className="max-w-7xl mx-auto">
             <h2 className="text-2xl font-bold text-white mb-6">Minhas Contas</h2>
 
+            <button onClick={() => router.push(`/clientes/${clienteId}/cadastroConta`) }><Plus/></button>
+
             {cliente.contas && cliente.contas.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 {cliente.contas.map((conta, idx) => (
@@ -517,7 +519,7 @@ export default function DashboardPage() {
             </div>
 
             <div className="mt-6 p-4 bg-blue-500/10 border border-blue-500/30 rounded-xl">
-              <p className="text-blue-300 text-sm">
+              <p className="text-white text-sm">
                 ℹ️ Precisa atualizar seus dados? Entre em contato com o nosso
                 suporte.
               </p>
