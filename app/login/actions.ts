@@ -27,7 +27,9 @@ export async function loginAction(cpf: string, password: string) {
       tipo = "funcionario";
       accessToken = data.access_token;
       const payload = decodeJwt(data.access_token);
-      userId = payload.sub ?? payload.id ?? payload.userId; // ajuste conforme seu JWT
+      console.log(payload);
+
+      userId = payload.id;
     } else {
       response = await fetch("http://localhost:8080/clientes/login", {
         method: "POST",
@@ -55,11 +57,11 @@ export async function loginAction(cpf: string, password: string) {
   const cookieStore = await cookies();
   cookieStore.set("access_token", accessToken);
   cookieStore.set("user_type", tipo);
-  cookieStore.set("user_id", String(userId)); // 👈 salva o ID
+  cookieStore.set("user_id", String(userId)); 
 
   if (tipo === "funcionario") {
     redirect("/dashboard/funcionario");
   }
 
-  redirect(`/clientes/${userId}/dashboard`); // 👈 rota com ID
+  redirect(`/clientes/${userId}/dashboard`); 
 }

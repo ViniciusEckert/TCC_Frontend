@@ -86,6 +86,7 @@ export default function CadastroPage() {
       
       if (!result.success) {
         setError(result.message ?? 'Erro ao criar conta. Tente novamente.');
+        return;
       }
       
       router.push("/")

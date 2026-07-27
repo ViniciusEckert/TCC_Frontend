@@ -39,12 +39,6 @@ export default function DepositarPage() {
       descricao: 'PIX ou TED/DOC',
       icone: '🏦',
     },
-    {
-      id: 'BOLETO',
-      nome: 'Boleto Bancário',
-      descricao: 'Gere um boleto para pagar',
-      icone: '📄',
-    },
   ];
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {

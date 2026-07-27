@@ -6,7 +6,7 @@ import { cookies } from 'next/headers';
 
 interface CreateConta {
   senha: string;
-  tipo_conta: 'CORRENTE' | 'POUPANÇA' | 'UNIVERSITARIA' | 'SALARIO';
+  tipo_conta: 'CORRENTE' | 'POUPANCA' | 'UNIVERSITARIA' | 'SALARIO';
   saldo?: number;
   data_abertura?: string;
 }
@@ -32,58 +32,77 @@ export async function createConta(
       redirect('/login');
     }
 
-    // 1. Criar a conta
-    const createResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/contas`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({
-        senha: conta.senha,
-        tipo_conta: conta.tipo_conta,
-        saldo: conta.saldo ?? 0,
-        data_abertura: conta.data_abertura ?? new Date().toISOString(),
-      }),
-    });
-
-    const contaData = (await createResponse.json()) as ResponseConta;
-
-    if (createResponse.status !== 201) {
-      if (createResponse.status === 401) {
-        redirect('/login');
+    const response = await fetch(
+      `${process.env.NEXT_PUBLIC_API_URL}/contas`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          senha: conta.senha,
+          tipo_conta: conta.tipo_conta,
+          saldo: conta.saldo ?? 0,
+          data_abertura: conta.data_abertura ?? new Date().toISOString(),
+          clienteIds: [clienteId], // conexão automática
+        }),
       }
+    );
+
+    if (response.status === 401) {
+      redirect('/login');
+    }
+
+    if (!response.ok) {
+      console.error(await response.text());
       return null;
     }
 
-    // 2. Conectar a conta ao cliente
-    try {
-      const connectResponse = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/contas/${contaData.id}/conectar`,
-        {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            clienteIds: [clienteId],
-          }),
-        }
-      );
+    const contaData = (await response.json()) as ResponseConta;
 
-      if (!connectResponse.ok) {
-        console.error('Falha ao conectar conta ao cliente:', connectResponse.status);
-      }
-    } catch (connectError) {
-      // Se falhar a conexão, a conta foi criada mesmo assim
-      console.error('Erro ao conectar conta ao cliente:', connectError);
-    }
+    revalidateTag('listar', 'max');
 
-    revalidateTag('listar','max');
     return contaData;
   } catch (error) {
     console.error('Erro ao criar conta:', error);
     return null;
+  }
+}
+
+export async function deleteConta(contaId: number): Promise<boolean> {
+  try {
+    const cookieStore = await cookies();
+    const token = cookieStore.get('access_token')?.value;
+
+    if (!token) {
+      redirect('/login');
+    }
+
+    const response = await fetch(
+      `${process.env.NEXT_PUBLIC_API_URL}/contas/${contaId}`,
+      {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    if (response.status === 401) {
+      redirect('/login');
+    }
+
+    if (!response.ok) {
+      console.error(await response.text());
+      return false;
+    }
+
+    revalidateTag('listar', 'max');
+
+    return true;
+  } catch (error) {
+    console.error('Erro ao deletar conta:', error);
+    return false;
   }
 }

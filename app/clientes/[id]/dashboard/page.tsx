@@ -19,10 +19,12 @@ import {
   Plus,
   Download,
   Copy,
+  Trash2,
 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter, useParams } from 'next/navigation';
 import { Cliente } from '@/app/interfaces/clientes';
+import { deleteConta } from '../cadastroConta/actions';
 
 
 export default function DashboardPage() {
@@ -35,6 +37,7 @@ export default function DashboardPage() {
   const [error, setError] = useState<string | null>(null);
   const [saldoVisivel, setSaldoVisivel] = useState(true);
   const [contaSelecionada, setContaSelecionada] = useState(0);
+  const [excluindoId, setExcluindoId] = useState<number | null>(null);
 
   useEffect(() => {
     const buscarCliente = async () => {
@@ -69,6 +72,28 @@ export default function DashboardPage() {
       buscarCliente();
     }
   }, [clienteId]);
+
+    const handleExcluirConta = async (e: React.MouseEvent, contaId: number) => {
+      e.stopPropagation();
+
+      const confirmar = window.confirm('Tem certeza que deseja excluir esta conta?');
+      if (!confirmar) return;
+
+      setExcluindoId(contaId);
+      const sucesso = await deleteConta(contaId);
+      setExcluindoId(null);
+
+      if (sucesso) {
+        setCliente(prev =>
+          prev
+            ? { ...prev, contas: prev.contas.filter(c => c.id !== contaId) }
+            : prev
+        );
+        setContaSelecionada(0);
+      } else {
+        alert('Não foi possível excluir a conta. Tente novamente.');
+      }
+    };
 
   const handleLogout = () => {
     localStorage.removeItem('token');
@@ -262,12 +287,6 @@ export default function DashboardPage() {
       rota: `/clientes/${clienteId}/dashboard/depositar`,
     },
     {
-      icon: CreditCard,
-      label: 'Cartões',
-      color: 'from-purple-500/20',
-      rota: `/clientes/${clienteId}/dashboard/cartoes`,
-    },
-    {
       icon: Download,
       label: 'Extratos',
       color: 'from-orange-500/20',
@@ -301,18 +320,34 @@ export default function DashboardPage() {
             {cliente.contas && cliente.contas.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 {cliente.contas.map((conta, idx) => (
-                  <button
+                  <div
                     key={conta.id}
+                    role="button"
+                    tabIndex={0}
                     onClick={() => setContaSelecionada(idx)}
-                    className={`text-left transition-all ${
+                    onKeyDown={(e) => e.key === 'Enter' && setContaSelecionada(idx)}
+                    className={`text-left transition-all cursor-pointer ${
                       contaSelecionada === idx
                         ? 'ring-2 ring-red-400'
                         : 'hover:scale-105'
                     }`}
                   >
                     <div
-                      className={`bg-linear-to-br ${obterCorTipoConta(conta.tipo_conta)} border border-red-500/20 rounded-2xl p-6 backdrop-blur-sm`}
+                      className={`bg-linear-to-br ${obterCorTipoConta(conta.tipo_conta)} border border-red-500/20 rounded-2xl p-6 backdrop-blur-sm relative`}
                     >
+                      <button
+                        onClick={(e) => handleExcluirConta(e, conta.id)}
+                        disabled={excluindoId === conta.id}
+                        className="absolute top-3 right-3 p-1.5 text-gray-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition disabled:opacity-50"
+                        aria-label="Excluir conta"
+                      >
+                        {excluindoId === conta.id ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : (
+                          <Trash2 className="w-4 h-4" />
+                        )}
+                      </button>
+
                       <div className="flex justify-between items-start mb-4">
                         <div>
                           <p className="text-gray-400 text-sm">
@@ -321,7 +356,7 @@ export default function DashboardPage() {
                           <p className="text-white font-bold">
                             {conta.tipo_conta === 'CORRENTE'
                               ? 'Conta Corrente'
-                              : conta.tipo_conta === 'POUPANÇA'
+                              : conta.tipo_conta === 'POUPANCA'
                                 ? 'Poupança'
                                 : conta.tipo_conta === 'UNIVERSITARIA'
                                   ? 'Universitária'
@@ -333,9 +368,7 @@ export default function DashboardPage() {
 
                       <p className="text-gray-400 text-xs mb-4">
                         Aberta em{' '}
-                        {new Date(conta.data_abertura).toLocaleDateString(
-                          'pt-BR'
-                        )}
+                        {new Date(conta.data_abertura).toLocaleDateString('pt-BR')}
                       </p>
 
                       <p className="text-white text-2xl font-bold">
@@ -346,7 +379,7 @@ export default function DashboardPage() {
                         })}
                       </p>
                     </div>
-                  </button>
+                  </div>
                 ))}
               </div>
             ) : (

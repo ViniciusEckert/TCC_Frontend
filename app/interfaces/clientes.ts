@@ -1,7 +1,7 @@
 export interface Conta {
-  id: string;
+  id: number;
   senha: string;
-  tipo_conta: 'CORRENTE' | 'POUPANÇA' | 'UNIVERSITARIA' | 'SALARIO'
+  tipo_conta: 'CORRENTE' | 'POUPANCA' | 'UNIVERSITARIA' | 'SALARIO'
   saldo: number;
   data_abertura: Date
 
