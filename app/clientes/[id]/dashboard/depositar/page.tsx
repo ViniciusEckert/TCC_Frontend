@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Shield,
   LogOut,
@@ -15,11 +15,22 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter, useParams } from 'next/navigation';
+import { atualizarSaldo } from './actions';
+
+interface Conta {
+  id: number;
+  tipo: string;
+  saldo: number;
+}
 
 export default function DepositarPage() {
   const router = useRouter();
   const params = useParams();
   const clienteId = params.id;
+
+  const [contas, setContas] = useState<Conta[]>([]);
+  const [contaSelecionada, setContaSelecionada] = useState<Conta | null>(null);
+  const [loadingContas, setLoadingContas] = useState(true);
 
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
@@ -27,26 +38,43 @@ export default function DepositarPage() {
   const [success, setSuccess] = useState(false);
   const [copied, setCopied] = useState(false);
 
-  const [formData, setFormData] = useState({
-    valor: '',
-    metodo: 'TRANSFERENCIA_BANCARIA',
-  });
+  const [valor, setValor] = useState('');
 
-  const metodos = [
-    {
-      id: 'TRANSFERENCIA_BANCARIA',
-      nome: 'Transferência Bancária',
-      descricao: 'PIX ou TED/DOC',
-      icone: '🏦',
-    },
-  ];
+  useEffect(() => {
+    const fetchContas = async () => {
+      try {
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/clientes/${clienteId}/contas`,
+          {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem('token')}`,
+            },
+          }
+        );
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+        if (!response.ok) {
+          throw new Error('Erro ao carregar contas');
+        }
+
+        const data = await response.json();
+        setContas(data);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Erro ao carregar contas');
+      } finally {
+        setLoadingContas(false);
+      }
+    };
+
+    fetchContas();
+  }, [clienteId]);
+
+  const tipoLabel = (tipo: string) => {
+    const labels: Record<string, string> = {
+      CORRENTE: 'Conta Corrente',
+      POUPANCA: 'Conta Poupança',
+      SALARIO: 'Conta Salário',
+    };
+    return labels[tipo] || tipo;
   };
 
   const handleCopy = async (text: string) => {
@@ -58,29 +86,24 @@ export default function DepositarPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!formData.valor) {
+    if (!contaSelecionada) {
+      setError('Selecione uma conta');
+      return;
+    }
+
+    if (!valor || parseFloat(valor) <= 0) {
       setError('Informe o valor do depósito');
       return;
     }
 
     setLoading(true);
-    try {
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/deposito`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${localStorage.getItem('token')}`,
-          },
-          body: JSON.stringify({
-            valor: parseFloat(formData.valor),
-            metodo: formData.metodo,
-          }),
-        }
-      );
+    setError(null);
 
-      if (!response.ok) {
+    try {
+      const novoSaldo = contaSelecionada.saldo + parseFloat(valor);
+      const ok = await atualizarSaldo(contaSelecionada.id, { saldo: novoSaldo });
+
+      if (!ok) {
         throw new Error('Erro ao processar depósito');
       }
 
@@ -101,9 +124,9 @@ export default function DepositarPage() {
     router.push('/login');
   };
 
-  const pixKey = `chave-pix-${clienteId}@financebank`;
-  const agencia = '0001';
-  const conta = '0001234567';
+  const pixKey = contaSelecionada
+    ? `chave-pix-conta-${contaSelecionada.id}@financebank`
+    : '';
 
   return (
     <div className="min-h-screen bg-linear-to-b from-red-950 via-red-900 to-black">
@@ -183,135 +206,97 @@ export default function DepositarPage() {
 
           {!success && (
             <>
-              {/* STEP 1: SELECIONAR MÉTODO */}
+              {/* STEP 1: SELECIONAR CONTA */}
               {step === 1 && (
                 <>
                   <h2 className="text-xl font-bold text-white mb-4">
-                    Escolha o método de depósito
+                    Escolha a conta de destino
                   </h2>
-                  <div className="grid grid-cols-1 gap-4 mb-8">
-                    {metodos.map((metodo) => (
-                      <button
-                        key={metodo.id}
-                        onClick={() => {
-                          setFormData((prev) => ({
-                            ...prev,
-                            metodo: metodo.id,
-                          }));
-                          setStep(2);
-                          setError(null);
-                        }}
-                        className={`text-left p-6 rounded-2xl border-2 transition ${
-                          formData.metodo === metodo.id
-                            ? 'bg-red-900/40 border-red-500'
-                            : 'bg-red-900/20 border-red-500/10 hover:border-red-500/30'
-                        }`}
-                      >
-                        <div className="flex items-start justify-between">
-                          <div>
-                            <div className="text-3xl mb-2">{metodo.icone}</div>
-                            <h3 className="font-bold text-white text-lg">
-                              {metodo.nome}
-                            </h3>
-                            <p className="text-gray-400 text-sm">
-                              {metodo.descricao}
-                            </p>
+
+                  {loadingContas ? (
+                    <div className="flex justify-center py-12">
+                      <Loader2 className="w-8 h-8 text-red-400 animate-spin" />
+                    </div>
+                  ) : contas.length === 0 ? (
+                    <div className="bg-red-900/20 border border-red-500/10 rounded-2xl p-6 text-center text-gray-400">
+                      Nenhuma conta encontrada.
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 gap-4 mb-8">
+                      {contas.map((conta) => (
+                        <button
+                          key={conta.id}
+                          onClick={() => {
+                            setContaSelecionada(conta);
+                            setStep(2);
+                            setError(null);
+                          }}
+                          className={`text-left p-6 rounded-2xl border-2 transition ${
+                            contaSelecionada?.id === conta.id
+                              ? 'bg-red-900/40 border-red-500'
+                              : 'bg-red-900/20 border-red-500/10 hover:border-red-500/30'
+                          }`}
+                        >
+                          <div className="flex items-start justify-between">
+                            <div>
+                              <h3 className="font-bold text-white text-lg">
+                                {tipoLabel(conta.tipo)}
+                              </h3>
+                              <p className="text-gray-400 text-sm">
+                                Saldo atual: R${' '}
+                                {conta.saldo.toLocaleString('pt-BR', {
+                                  minimumFractionDigits: 2,
+                                })}
+                              </p>
+                            </div>
+                            <div
+                              className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
+                                contaSelecionada?.id === conta.id
+                                  ? 'border-red-400 bg-red-500'
+                                  : 'border-gray-500'
+                              }`}
+                            >
+                              {contaSelecionada?.id === conta.id && (
+                                <Check className="w-4 h-4 text-white" />
+                              )}
+                            </div>
                           </div>
-                          <div
-                            className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
-                              formData.metodo === metodo.id
-                                ? 'border-red-400 bg-red-500'
-                                : 'border-gray-500'
-                            }`}
-                          >
-                            {formData.metodo === metodo.id && (
-                              <Check className="w-4 h-4 text-white" />
-                            )}
-                          </div>
-                        </div>
-                      </button>
-                    ))}
-                  </div>
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </>
               )}
 
               {/* STEP 2: DETALHES DO DEPÓSITO */}
-              {step === 2 && (
+              {step === 2 && contaSelecionada && (
                 <form onSubmit={handleSubmit} className="space-y-6">
-                  {/* DADOS DA CONTA */}
+                  {/* CONTA SELECIONADA */}
                   <div className="bg-red-900/20 border border-red-500/10 rounded-2xl p-6 backdrop-blur-sm">
-                    <h3 className="text-white font-bold mb-4">Dados da sua Conta</h3>
-                    <div className="space-y-3">
-                      <div>
-                        <p className="text-gray-400 text-sm mb-1">Agência</p>
-                        <div className="flex items-center gap-2">
-                          <input
-                            type="text"
-                            value={agencia}
-                            readOnly
-                            className="flex-1 bg-red-950/50 border border-red-500/20 text-white rounded-lg px-4 py-2 text-sm"
-                          />
-                          <button
-                            type="button"
-                            onClick={() => handleCopy(agencia)}
-                            className="p-2 text-gray-400 hover:text-white transition"
-                          >
-                            {copied ? (
-                              <Check className="w-5 h-5 text-green-400" />
-                            ) : (
-                              <Copy className="w-5 h-5" />
-                            )}
-                          </button>
-                        </div>
+                    <h3 className="text-white font-bold mb-4">
+                      {tipoLabel(contaSelecionada.tipo)}
+                    </h3>
+                    <div>
+                      <p className="text-gray-400 text-sm mb-1">Chave PIX</p>
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="text"
+                          value={pixKey}
+                          readOnly
+                          className="flex-1 bg-red-950/50 border border-red-500/20 text-white rounded-lg px-4 py-2 text-sm"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => handleCopy(pixKey)}
+                          className="p-2 text-gray-400 hover:text-white transition"
+                        >
+                          {copied ? (
+                            <Check className="w-5 h-5 text-green-400" />
+                          ) : (
+                            <Copy className="w-5 h-5" />
+                          )}
+                        </button>
                       </div>
-
-                      <div>
-                        <p className="text-gray-400 text-sm mb-1">Conta</p>
-                        <div className="flex items-center gap-2">
-                          <input
-                            type="text"
-                            value={conta}
-                            readOnly
-                            className="flex-1 bg-red-950/50 border border-red-500/20 text-white rounded-lg px-4 py-2 text-sm"
-                          />
-                          <button
-                            type="button"
-                            onClick={() => handleCopy(conta)}
-                            className="p-2 text-gray-400 hover:text-white transition"
-                          >
-                            {copied ? (
-                              <Check className="w-5 h-5 text-green-400" />
-                            ) : (
-                              <Copy className="w-5 h-5" />
-                            )}
-                          </button>
-                        </div>
-                      </div>
-
-                      {formData.metodo === 'TRANSFERENCIA_BANCARIA' && (
-                        <div>
-                          <p className="text-gray-400 text-sm mb-1">Chave PIX</p>
-                          <div className="flex items-center gap-2">
-                            <input
-                              type="text"
-                              value={pixKey}
-                              readOnly
-                              className="flex-1 bg-red-950/50 border border-red-500/20 text-white rounded-lg px-4 py-2 text-sm"
-                            />
-                            <button
-                              type="button"
-                              onClick={() => handleCopy(pixKey)}
-                              className="p-2 text-gray-400 hover:text-white transition"
-                            >
-                              {copied ? (
-                                <Check className="w-5 h-5 text-green-400" />
-                              ) : (
-                                <Copy className="w-5 h-5" />
-                              )}
-                            </button>
-                          </div>
-                        </div>
-                      )}
                     </div>
                   </div>
 
@@ -328,8 +313,8 @@ export default function DepositarPage() {
                         placeholder="0.00"
                         step="0.01"
                         min="0"
-                        value={formData.valor}
-                        onChange={handleInputChange}
+                        value={valor}
+                        onChange={(e) => setValor(e.target.value)}
                         className="flex-1 bg-red-950/50 border border-red-500/20 text-white placeholder-gray-600 rounded-lg px-4 py-3 focus:outline-none focus:border-red-500/50 transition text-lg"
                       />
                     </div>
@@ -338,7 +323,7 @@ export default function DepositarPage() {
                   {/* INFO */}
                   <div className="bg-blue-500/10 border border-blue-500/30 rounded-xl p-4">
                     <p className="text-blue-300 text-sm">
-                      💡 Utilize as informações acima para enviar seu depósito. O crédito
+                      💡 Utilize a chave PIX acima para enviar seu depósito. O crédito
                       geralmente aparece em até 1-2 horas úteis.
                     </p>
                   </div>

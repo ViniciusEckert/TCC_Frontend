@@ -6,11 +6,11 @@ import { Shield, Eye, EyeOff, ChevronRight, AlertCircle, Loader2, CreditCard } f
 import { createConta } from './actions';
 import { useRouter, useParams } from "next/navigation";
 
-type TipoConta = 'CORRENTE' | 'POUPANÇA' | 'UNIVERSITARIA' | 'SALARIO';
+type TipoConta = 'CORRENTE' | 'POUPANCA' | 'UNIVERSITARIA' | 'SALARIO';
 
 const TIPOS_CONTA: { value: TipoConta; label: string; desc: string }[] = [
   { value: 'CORRENTE',      label: 'Conta Corrente',      desc: 'Para o dia a dia, transferências e pagamentos' },
-  { value: 'POUPANÇA',      label: 'Conta Poupança',      desc: 'Rendimento mensal com liquidez imediata' },
+  { value: 'POUPANCA',      label: 'Conta Poupança',      desc: 'Rendimento mensal com liquidez imediata' },
   { value: 'UNIVERSITARIA', label: 'Conta Universitária', desc: 'Benefícios exclusivos para estudantes' },
   { value: 'SALARIO',       label: 'Conta Salário',       desc: 'Receba seu salário sem tarifas' },
 ];
