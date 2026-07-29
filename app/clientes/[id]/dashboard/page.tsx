@@ -139,7 +139,7 @@ export default function DashboardPage() {
     : null;
   
   const saldoTotal = cliente.contas && cliente.contas.length > 0
-    ? cliente.contas.reduce((acc, conta) => acc + conta.saldo, 0)
+    ? cliente.contas.reduce((acc, conta) => acc + Number(conta.saldo), 0)
     : 0;
   
   const transacoesRecentes = contaAtiva?.transacoes && Array.isArray(contaAtiva.transacoes)
@@ -373,7 +373,7 @@ export default function DashboardPage() {
 
                       <p className="text-white text-2xl font-bold">
                         R${' '}
-                        {conta.saldo.toLocaleString('pt-BR', {
+                        {Number(conta.saldo).toLocaleString('pt-BR', {
                           minimumFractionDigits: 2,
                           maximumFractionDigits: 2,
                         })}
@@ -502,8 +502,8 @@ export default function DashboardPage() {
                           <td
                             className={`px-6 py-4 text-right font-bold ${obterCorTransacao(transacao.tipo)}`}
                           >
-                            {transacao.valor >= 0 ? '+' : ''}R${' '}
-                            {Math.abs(transacao.valor).toLocaleString('pt-BR', {
+                            {Number(transacao.valor) >= 0 ? '+' : ''}R${' '}
+                            {Math.abs(Number(transacao.valor)).toLocaleString('pt-BR', {
                               minimumFractionDigits: 2,
                               maximumFractionDigits: 2,
                             })}

@@ -12,25 +12,21 @@ import {
   Settings,
   Copy,
   Check,
+  Wallet,
 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter, useParams } from 'next/navigation';
-import { atualizarSaldo } from './actions';
-
-interface Conta {
-  id: number;
-  tipo: string;
-  saldo: number;
-}
+import { Cliente, Conta } from '../../../../interfaces/clientes';
+import { getCliente, atualizarSaldo } from './actions';
 
 export default function DepositarPage() {
   const router = useRouter();
   const params = useParams();
   const clienteId = params.id;
 
-  const [contas, setContas] = useState<Conta[]>([]);
-  const [contaSelecionada, setContaSelecionada] = useState<Conta | null>(null);
+  const [cliente, setCliente] = useState<Cliente | null>(null);
   const [loadingContas, setLoadingContas] = useState(true);
+  const [contaSelecionada, setContaSelecionada] = useState<Conta | null>(null);
 
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
@@ -41,23 +37,11 @@ export default function DepositarPage() {
   const [valor, setValor] = useState('');
 
   useEffect(() => {
-    const fetchContas = async () => {
+    const buscarCliente = async () => {
       try {
-        const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/clientes/${clienteId}/contas`,
-          {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem('token')}`,
-            },
-          }
-        );
-
-        if (!response.ok) {
-          throw new Error('Erro ao carregar contas');
-        }
-
-        const data = await response.json();
-        setContas(data);
+        setLoadingContas(true);
+        const data = await getCliente(Number(clienteId));
+        setCliente(data);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Erro ao carregar contas');
       } finally {
@@ -65,16 +49,26 @@ export default function DepositarPage() {
       }
     };
 
-    fetchContas();
+    if (clienteId) {
+      buscarCliente();
+    }
   }, [clienteId]);
 
-  const tipoLabel = (tipo: string) => {
-    const labels: Record<string, string> = {
-      CORRENTE: 'Conta Corrente',
-      POUPANCA: 'Conta Poupança',
-      SALARIO: 'Conta Salário',
+  const obterCorTipoConta = (tipo: string) => {
+    const cores: Record<string, string> = {
+      CORRENTE: 'from-blue-500/10 to-cyan-500/10',
+      POUPANCA: 'from-green-500/10 to-emerald-500/10',
+      UNIVERSITARIA: 'from-purple-500/10 to-pink-500/10',
+      SALARIO: 'from-orange-500/10 to-amber-500/10',
     };
-    return labels[tipo] || tipo;
+    return cores[tipo] || 'from-red-500/10 to-pink-500/10';
+  };
+
+  const tipoLabel = (tipo: string) => {
+    if (tipo === 'CORRENTE') return 'Conta Corrente';
+    if (tipo === 'POUPANCA') return 'Poupança';
+    if (tipo === 'UNIVERSITARIA') return 'Universitária';
+    return 'Salário';
   };
 
   const handleCopy = async (text: string) => {
@@ -217,13 +211,14 @@ export default function DepositarPage() {
                     <div className="flex justify-center py-12">
                       <Loader2 className="w-8 h-8 text-red-400 animate-spin" />
                     </div>
-                  ) : contas.length === 0 ? (
-                    <div className="bg-red-900/20 border border-red-500/10 rounded-2xl p-6 text-center text-gray-400">
-                      Nenhuma conta encontrada.
+                  ) : !cliente?.contas || cliente.contas.length === 0 ? (
+                    <div className="bg-red-900/20 border border-red-500/10 rounded-2xl p-8 text-center">
+                      <Wallet className="w-12 h-12 text-gray-500 mx-auto mb-4" />
+                      <p className="text-gray-400">Nenhuma conta encontrada.</p>
                     </div>
                   ) : (
                     <div className="grid grid-cols-1 gap-4 mb-8">
-                      {contas.map((conta) => (
+                      {cliente.contas.map((conta) => (
                         <button
                           key={conta.id}
                           onClick={() => {
@@ -231,34 +226,41 @@ export default function DepositarPage() {
                             setStep(2);
                             setError(null);
                           }}
-                          className={`text-left p-6 rounded-2xl border-2 transition ${
+                          className={`text-left rounded-2xl border-2 transition ${
                             contaSelecionada?.id === conta.id
-                              ? 'bg-red-900/40 border-red-500'
-                              : 'bg-red-900/20 border-red-500/10 hover:border-red-500/30'
+                              ? 'border-red-500'
+                              : 'border-red-500/10 hover:border-red-500/30'
                           }`}
                         >
-                          <div className="flex items-start justify-between">
-                            <div>
-                              <h3 className="font-bold text-white text-lg">
-                                {tipoLabel(conta.tipo)}
-                              </h3>
-                              <p className="text-gray-400 text-sm">
-                                Saldo atual: R${' '}
-                                {conta.saldo.toLocaleString('pt-BR', {
-                                  minimumFractionDigits: 2,
-                                })}
-                              </p>
-                            </div>
-                            <div
-                              className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
-                                contaSelecionada?.id === conta.id
-                                  ? 'border-red-400 bg-red-500'
-                                  : 'border-gray-500'
-                              }`}
-                            >
-                              {contaSelecionada?.id === conta.id && (
-                                <Check className="w-4 h-4 text-white" />
-                              )}
+                          <div
+                            className={`bg-linear-to-br ${obterCorTipoConta(conta.tipo_conta)} rounded-2xl p-6 backdrop-blur-sm`}
+                          >
+                            <div className="flex items-start justify-between">
+                              <div>
+                                <p className="text-gray-400 text-sm">
+                                  {conta.tipo_conta}
+                                </p>
+                                <h3 className="font-bold text-white text-lg">
+                                  {tipoLabel(conta.tipo_conta)}
+                                </h3>
+                                <p className="text-gray-400 text-sm mt-2">
+                                  Saldo atual: R${' '}
+                                  {conta.saldo.toLocaleString('pt-BR', {
+                                    minimumFractionDigits: 2,
+                                  })}
+                                </p>
+                              </div>
+                              <div
+                                className={`w-6 h-6 rounded-full border-2 flex items-center justify-center shrink-0 ${
+                                  contaSelecionada?.id === conta.id
+                                    ? 'border-red-400 bg-red-500'
+                                    : 'border-gray-500'
+                                }`}
+                              >
+                                {contaSelecionada?.id === conta.id && (
+                                  <Check className="w-4 h-4 text-white" />
+                                )}
+                              </div>
                             </div>
                           </div>
                         </button>
@@ -274,7 +276,7 @@ export default function DepositarPage() {
                   {/* CONTA SELECIONADA */}
                   <div className="bg-red-900/20 border border-red-500/10 rounded-2xl p-6 backdrop-blur-sm">
                     <h3 className="text-white font-bold mb-4">
-                      {tipoLabel(contaSelecionada.tipo)}
+                      {tipoLabel(contaSelecionada.tipo_conta)}
                     </h3>
                     <div>
                       <p className="text-gray-400 text-sm mb-1">Chave PIX</p>
