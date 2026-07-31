@@ -94,7 +94,7 @@ export default function DepositarPage() {
     setError(null);
 
     try {
-      const novoSaldo = contaSelecionada.saldo + parseFloat(valor);
+      const novoSaldo = Number(contaSelecionada.saldo) + parseFloat(valor);
       const ok = await atualizarSaldo(contaSelecionada.id, { saldo: novoSaldo });
 
       if (!ok) {
@@ -118,9 +118,7 @@ export default function DepositarPage() {
     router.push('/login');
   };
 
-  const pixKey = contaSelecionada
-    ? `chave-pix-conta-${contaSelecionada.id}@financebank`
-    : '';
+  const pixKey = contaSelecionada?.pix || '';
 
   return (
     <div className="min-h-screen bg-linear-to-b from-red-950 via-red-900 to-black">
@@ -245,7 +243,7 @@ export default function DepositarPage() {
                                 </h3>
                                 <p className="text-gray-400 text-sm mt-2">
                                   Saldo atual: R${' '}
-                                  {conta.saldo.toLocaleString('pt-BR', {
+                                  {Number(conta.saldo).toLocaleString('pt-BR', {
                                     minimumFractionDigits: 2,
                                   })}
                                 </p>

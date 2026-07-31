@@ -210,7 +210,7 @@ export default function DashboardPage() {
           <div className="w-10 h-10 bg-linear-to-br from-red-500 to-red-700 rounded-lg flex items-center justify-center">
             <Shield className="text-white w-6 h-6" />
           </div>
-          <span className="text-white font-bold text-xl">FinanceBank</span>
+          <span className="text-white font-bold text-xl">ForjaBank</span>
         </Link>
 
         <div className="flex items-center gap-4">
@@ -242,7 +242,7 @@ export default function DashboardPage() {
                   Olá, {cliente.nome.split(' ')[0]}! 👋
                 </h1>
                 <p className="text-gray-400">
-                  Bem-vindo de volta ao FinanceBank
+                  Bem-vindo de volta ao ForjaBank
                 </p>
               </div>
               <div className="text-right">
@@ -564,7 +564,7 @@ export default function DashboardPage() {
         <footer className="border-t border-red-500/10 px-6 py-8 mt-8">
           <div className="max-w-7xl mx-auto text-center text-gray-500 text-sm">
             <p>
-              © 2024 FinanceBank. Todos os direitos reservados. | Segurança
+              © 2024 ForjaBank. Todos os direitos reservados. | Segurança
               24/7
             </p>
           </div>
