@@ -17,26 +17,14 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter, useParams } from 'next/navigation';
-import { buscarContas, type Conta } from '../transferir/actions';
-
-interface Transacao {
-  id: number;
-  tipo: string;
-  valor: number;
-  descricao: string;
-  dataTransacao: string;
-}
-
-interface ContaComTransacoes extends Conta {
-  transacoes?: Transacao[];
-}
+import { buscarContasExtrato, type Conta } from './action';
 
 export default function ExtratoPage() {
   const router = useRouter();
   const params = useParams();
   const clienteId = params.id as string;
 
-  const [contas, setContas] = useState<ContaComTransacoes[]>([]);
+  const [contas, setContas] = useState<Conta[]>([]);
   const [contaSelecionada, setContaSelecionada] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -51,10 +39,10 @@ export default function ExtratoPage() {
     const buscarDados = async () => {
       try {
         setLoading(true);
-        const resultado = await buscarContas(Number(clienteId));
+        const resultado = await buscarContasExtrato(Number(clienteId));
 
         if (resultado.sucesso) {
-          setContas(resultado.contas as ContaComTransacoes[]);
+          setContas(resultado.contas);
         } else {
           setError(resultado.erro || 'Erro ao buscar dados');
         }
@@ -126,7 +114,7 @@ export default function ExtratoPage() {
   if (filtros.dataInicio) {
     const dataInicio = new Date(filtros.dataInicio);
     transacoesFiltradas = transacoesFiltradas.filter(
-      (t) => new Date(t.dataTransacao) >= dataInicio
+      (t) => new Date(t.data) >= dataInicio
     );
   }
 
@@ -134,13 +122,12 @@ export default function ExtratoPage() {
     const dataFim = new Date(filtros.dataFim);
     dataFim.setHours(23, 59, 59);
     transacoesFiltradas = transacoesFiltradas.filter(
-      (t) => new Date(t.dataTransacao) <= dataFim
+      (t) => new Date(t.data) <= dataFim
     );
   }
 
-  transacoesFiltradas = transacoesFiltradas.sort(
-    (a, b) =>
-      new Date(b.dataTransacao).getTime() - new Date(a.dataTransacao).getTime()
+  transacoesFiltradas = [...transacoesFiltradas].sort(
+    (a, b) => new Date(b.data).getTime() - new Date(a.data).getTime()
   );
 
   const somaEntradas = transacoesFiltradas
@@ -164,7 +151,7 @@ TRANSAÇÕES
 ${transacoesFiltradas
   .map(
     (t) =>
-      `${formatarDataHora(t.dataTransacao)} | ${obterLabelTransacao(t.tipo)} | R$ ${Math.abs(t.valor).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`
+      `${formatarDataHora(t.data)} | ${obterLabelTransacao(t.tipo)} | R$ ${Math.abs(t.valor).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`
   )
   .join('\n')}
     `;
@@ -450,10 +437,10 @@ ${transacoesFiltradas
                               </div>
                             </td>
                             <td className="px-6 py-4 text-gray-400">
-                              {formatarDataHora(transacao.dataTransacao)}
+                              {formatarDataHora(transacao.data)}
                             </td>
                             <td className="px-6 py-4 text-gray-400 text-sm">
-                              {transacao.descricao}
+                              {transacao.descricao ?? '-'}
                             </td>
                             <td
                               className={`px-6 py-4 text-right font-bold ${obterCorTransacao(transacao.tipo)}`}
