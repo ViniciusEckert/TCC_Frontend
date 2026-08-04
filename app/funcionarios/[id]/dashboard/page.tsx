@@ -550,7 +550,16 @@ useEffect(() => {
                         return (
                           <tr
                             key={id}
-                            className="border-b border-red-500/5 hover:bg-red-500/5 transition"
+                            onClick={() => {
+                              if (abaAtiva === "contas") {
+                                router.push(`/funcionarios/listarContas/${id}`);
+                              }
+                            }}
+                            className={`border-b border-red-500/5 transition ${
+                              abaAtiva === "contas"
+                                ? "cursor-pointer hover:bg-red-500/10"
+                                : "hover:bg-red-500/5"
+                            }`}
                           >
                             {config.colunas.map((coluna) => (
                               <td
@@ -563,14 +572,20 @@ useEffect(() => {
                             <td className="px-6 py-4">
                               <div className="flex items-center justify-end gap-2">
                                 <button
-                                  onClick={() => router.push(config.rotaEditar(id))}
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      router.push(config.rotaEditar(id));
+                                    }}
                                   className="p-2 text-gray-400 hover:text-white hover:bg-white/10 rounded-lg transition"
                                   aria-label={`Editar ${config.labelSingular}`}
                                 >
                                   <Pencil className="w-4 h-4" />
                                 </button>
                                 <button
-                                  onClick={() => handleExcluir(item)}
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleExcluir(item);
+                                    }}
                                   disabled={excluindoId === id}
                                   className="p-2 text-gray-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition disabled:opacity-50"
                                   aria-label={`Excluir ${config.labelSingular}`}

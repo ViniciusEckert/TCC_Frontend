@@ -17,14 +17,26 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter, useParams } from 'next/navigation';
-import { buscarContasExtrato, type Conta } from './action';
+import { buscarContas, type Conta } from '../transferir/actions';
+
+interface Transacao {
+  id: number;
+  tipo: string;
+  valor: number;
+  descricao: string;
+  dataTransacao: string;
+}
+
+interface ContaComTransacoes extends Conta {
+  transacoes?: Transacao[];
+}
 
 export default function ExtratoPage() {
   const router = useRouter();
   const params = useParams();
   const clienteId = params.id as string;
 
-  const [contas, setContas] = useState<Conta[]>([]);
+  const [contas, setContas] = useState<ContaComTransacoes[]>([]);
   const [contaSelecionada, setContaSelecionada] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -39,10 +51,10 @@ export default function ExtratoPage() {
     const buscarDados = async () => {
       try {
         setLoading(true);
-        const resultado = await buscarContasExtrato(Number(clienteId));
+        const resultado = await buscarContas(Number(clienteId));
 
         if (resultado.sucesso) {
-          setContas(resultado.contas);
+          setContas(resultado.contas as ContaComTransacoes[]);
         } else {
           setError(resultado.erro || 'Erro ao buscar dados');
         }
@@ -62,23 +74,19 @@ export default function ExtratoPage() {
     router.push('/login');
   };
 
-  const obterIconeTransacao = (tipo: string) => {
-    switch (tipo) {
-      case 'DEPOSITO':
-      case 'TRANSFERENCIA':
-        return <ArrowDownLeft className="w-5 h-5 text-green-400" />;
-      case 'SAQUE':
-      case 'PAGAMENTO':
-        return <ArrowUpRight className="w-5 h-5 text-red-400" />;
-      default:
-        return <TrendingUp className="w-5 h-5 text-gray-400" />;
-    }
+  // Entrada/saída são definidas pelo SINAL do valor, não pelo tipo —
+  // uma TRANSFERENCIA gera dois registros com o mesmo tipo, um positivo
+  // (quem recebe) e um negativo (quem envia).
+  const obterIconeTransacao = (valor: number) => {
+    return valor >= 0 ? (
+      <ArrowDownLeft className="w-5 h-5 text-green-400" />
+    ) : (
+      <ArrowUpRight className="w-5 h-5 text-red-400" />
+    );
   };
 
-  const obterCorTransacao = (tipo: string) => {
-    return ['DEPOSITO', 'TRANSFERENCIA'].includes(tipo)
-      ? 'text-green-400'
-      : 'text-red-400';
+  const obterCorTransacao = (valor: number) => {
+    return valor >= 0 ? 'text-green-400' : 'text-red-400';
   };
 
   const obterLabelTransacao = (tipo: string) => {
@@ -114,7 +122,7 @@ export default function ExtratoPage() {
   if (filtros.dataInicio) {
     const dataInicio = new Date(filtros.dataInicio);
     transacoesFiltradas = transacoesFiltradas.filter(
-      (t) => new Date(t.data) >= dataInicio
+      (t) => new Date(t.dataTransacao) >= dataInicio
     );
   }
 
@@ -122,20 +130,21 @@ export default function ExtratoPage() {
     const dataFim = new Date(filtros.dataFim);
     dataFim.setHours(23, 59, 59);
     transacoesFiltradas = transacoesFiltradas.filter(
-      (t) => new Date(t.data) <= dataFim
+      (t) => new Date(t.dataTransacao) <= dataFim
     );
   }
 
-  transacoesFiltradas = [...transacoesFiltradas].sort(
-    (a, b) => new Date(b.data).getTime() - new Date(a.data).getTime()
+  transacoesFiltradas = transacoesFiltradas.sort(
+    (a, b) =>
+      new Date(b.dataTransacao).getTime() - new Date(a.dataTransacao).getTime()
   );
 
   const somaEntradas = transacoesFiltradas
-    .filter((t) => ['DEPOSITO', 'TRANSFERENCIA'].includes(t.tipo))
+    .filter((t) => t.valor > 0)
     .reduce((acc, t) => acc + t.valor, 0);
 
   const somaSaidas = transacoesFiltradas
-    .filter((t) => ['SAQUE', 'PAGAMENTO'].includes(t.tipo))
+    .filter((t) => t.valor < 0)
     .reduce((acc, t) => acc + Math.abs(t.valor), 0);
 
   const handleExportarTXT = () => {
@@ -151,7 +160,7 @@ TRANSAÇÕES
 ${transacoesFiltradas
   .map(
     (t) =>
-      `${formatarDataHora(t.data)} | ${obterLabelTransacao(t.tipo)} | R$ ${Math.abs(t.valor).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`
+      `${formatarDataHora(t.dataTransacao)} | ${obterLabelTransacao(t.tipo)} | R$ ${Math.abs(t.valor).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`
   )
   .join('\n')}
     `;
@@ -196,7 +205,7 @@ ${transacoesFiltradas
           <div className="w-10 h-10 bg-linear-to-br from-red-500 to-red-700 rounded-lg flex items-center justify-center">
             <Shield className="text-white w-6 h-6" />
           </div>
-          <span className="text-white font-bold text-xl">FinanceBank</span>
+          <span className="text-white font-bold text-xl">ForjaBank</span>
         </Link>
 
         <div className="flex items-center gap-4">
@@ -424,7 +433,7 @@ ${transacoesFiltradas
                             <td className="px-6 py-4">
                               <div className="flex items-center gap-3">
                                 <div className="p-2 bg-red-500/10 rounded-lg">
-                                  {obterIconeTransacao(transacao.tipo)}
+                                  {obterIconeTransacao(transacao.valor)}
                                 </div>
                                 <div>
                                   <p className="text-white font-bold">
@@ -437,13 +446,13 @@ ${transacoesFiltradas
                               </div>
                             </td>
                             <td className="px-6 py-4 text-gray-400">
-                              {formatarDataHora(transacao.data)}
+                              {formatarDataHora(transacao.dataTransacao)}
                             </td>
                             <td className="px-6 py-4 text-gray-400 text-sm">
-                              {transacao.descricao ?? '-'}
+                              {transacao.descricao}
                             </td>
                             <td
-                              className={`px-6 py-4 text-right font-bold ${obterCorTransacao(transacao.tipo)}`}
+                              className={`px-6 py-4 text-right font-bold ${obterCorTransacao(transacao.valor)}`}
                             >
                               {transacao.valor >= 0 ? '+' : ''}R${' '}
                               {Math.abs(transacao.valor).toLocaleString(
