@@ -70,8 +70,10 @@ interface AbaConfig {
   excluir: (id: number) => Promise<unknown>;
   rotaNova: string;
   rotaEditar: (id: number) => string;
+  rotaDetalhes: (id: number) => string;
   colunas: Coluna[];
   buscaCampos: string[];
+  permiteCriar?: boolean;
 }
 
 /* ============================
@@ -115,8 +117,9 @@ const ABAS: AbaConfig[] = [
     icon: Users,
     listar: listarClientes,
     excluir: excluirCliente,
-    rotaNova: '/funcionario/clientes/novo',
-    rotaEditar: (id) => `/funcionario/clientes/${id}`,
+    rotaNova: '/funcionarios/criarCliente',
+    rotaEditar: (id) => `/funcionarios/cliente/${id}`,
+    rotaDetalhes: (id) => `/funcionarios/detalhes/listarClientes/${id}`,
     buscaCampos: ['nome', 'email', 'cpf'],
     colunas: [
       { header: 'Nome', render: (i) => texto(i.nome) },
@@ -133,8 +136,9 @@ const ABAS: AbaConfig[] = [
     icon: UserCog,
     listar: listarFuncionarios,
     excluir: excluirFuncionario,
-    rotaNova: '/funcionario/funcionarios/novo',
-    rotaEditar: (id) => `/funcionario/funcionarios/${id}`,
+    rotaNova: '/funcionarios/criarFuncionario',
+    rotaEditar: (id) => `/funcionarios/funcionario/${id}`,
+    rotaDetalhes: (id) => `/funcionarios/detalhes/listarFuncionarios/${id}`,
     buscaCampos: ['nome', 'email'],
     colunas: [
       { header: 'Nome', render: (i) => texto(i.nome) },
@@ -170,8 +174,9 @@ const ABAS: AbaConfig[] = [
     icon: Wallet,
     listar: listarContas,
     excluir: excluirConta,
-    rotaNova: '/funcionario/contas/novo',
-    rotaEditar: (id) => `/funcionario/contas/${id}`,
+    rotaNova: '/funcionarios/criarConta',
+    rotaEditar: (id) => `/funcionarios/conta/${id}`,
+    rotaDetalhes: (id) => `/funcionarios/detalhes/listarContas/${id}`,
     buscaCampos: ['tipo_conta', 'cliente_nome'],
     colunas: [
       { header: 'ID', render: (i) => `#${texto(i.id)}` },
@@ -200,6 +205,7 @@ const ABAS: AbaConfig[] = [
     excluir: excluirAgencia,
     rotaNova: '/funcionario/agencias/novo',
     rotaEditar: (id) => `/funcionario/agencias/${id}`,
+    rotaDetalhes: (id) => `/funcionarios/detalhes/listarAgencias/${id}`,
     buscaCampos: ['nome', 'numero', 'endereco'],
     colunas: [
       { header: 'Nome', render: (i) => texto(i.nome) },
@@ -214,8 +220,9 @@ const ABAS: AbaConfig[] = [
     icon: CreditCard,
     listar: listarCartoes,
     excluir: excluirCartao,
-    rotaNova: '/funcionario/cartoes/novo',
-    rotaEditar: (id) => `/funcionario/cartoes/${id}`,
+    rotaNova: '/funcionarios/criarCartao',
+    rotaEditar: (id) => `/funcionarios/cartao/${id}`,
+    rotaDetalhes: (id) => `/funcionarios/detalhes/listarCartoes/${id}`,
     buscaCampos: ['numero_cartao', 'tipoCartao'],
     colunas: [
       {
@@ -242,6 +249,8 @@ const ABAS: AbaConfig[] = [
     excluir: excluirTransacao,
     rotaNova: '/funcionario/transacoes/novo',
     rotaEditar: (id) => `/funcionario/transacoes/${id}`,
+    rotaDetalhes: (id) => `/funcionarios/detalhes/listarTransacoes/${id}`,
+    permiteCriar: false,
     buscaCampos: ['tipo'],
     colunas: [
       { header: 'Tipo', render: (i) => texto(i.tipo) },
@@ -251,10 +260,6 @@ const ABAS: AbaConfig[] = [
         className: 'text-right font-bold',
       },
       { header: 'Data', render: (i) => formatarData(i.dataTransacao) },
-      {
-        header: 'Conta',
-        render: (i) => texto(paraObjeto(i.conta)?.id ?? i.contaId),
-      },
     ],
   },
 ];
@@ -274,68 +279,66 @@ export default function PainelFuncionarioPage() {
 
   const config = useMemo(() => ABAS.find((a) => a.chave === abaAtiva)!, [abaAtiva]);
 
-const carregarDados = useCallback(async (aba: AbaConfig) => {
-  try {
-    setCarregando(true);
-    setErro(null);
-
-    const resultado = await aba.listar();
-
-    setDados(Array.isArray(resultado) ? resultado : []);
-  } catch (err) {
-    setErro(
-      err instanceof Error
-        ? err.message
-        : 'Erro ao carregar dados'
-    );
-    setDados([]);
-  } finally {
-    setCarregando(false);
-  }
-}, []);
-
-  // O efeito só busca os dados da aba atual; ele nunca dispara um
-  // setState "de reset" (como limpar a busca) — isso acontece no
-  // próprio manipulador de clique da aba, então não há setState
-  // síncrono e incondicional no início do efeito.
-useEffect(() => {
-  let ativo = true;
-
-  async function carregar() {
+  const carregarDados = useCallback(async (aba: AbaConfig) => {
     try {
       setCarregando(true);
       setErro(null);
 
-      const resultado = await config.listar();
-
-      if (!ativo) return;
-
-      console.log(JSON.stringify(resultado, null, 2));
+      const resultado = await aba.listar();
 
       setDados(Array.isArray(resultado) ? resultado : []);
     } catch (err) {
-      if (!ativo) return;
-
       setErro(
         err instanceof Error
           ? err.message
           : 'Erro ao carregar dados'
       );
-
       setDados([]);
     } finally {
-      if (ativo) {
-        setCarregando(false);
+      setCarregando(false);
+    }
+  }, []);
+
+  // O efeito só busca os dados da aba atual; ele nunca dispara um
+  // setState "de reset" (como limpar a busca) — isso acontece no
+  // próprio manipulador de clique da aba, então não há setState
+  // síncrono e incondicional no início do efeito.
+  useEffect(() => {
+    let ativo = true;
+
+    async function carregar() {
+      try {
+        setCarregando(true);
+        setErro(null);
+
+        const resultado = await config.listar();
+
+        if (!ativo) return;
+
+        setDados(Array.isArray(resultado) ? resultado : []);
+      } catch (err) {
+        if (!ativo) return;
+
+        setErro(
+          err instanceof Error
+            ? err.message
+            : 'Erro ao carregar dados'
+        );
+
+        setDados([]);
+      } finally {
+        if (ativo) {
+          setCarregando(false);
+        }
       }
     }
-  }
 
-  carregar();
+    carregar();
 
-  return () => {
-    ativo = false;
-  };
-}, [config]);
+    return () => {
+      ativo = false;
+    };
+  }, [config]);
 
   const handleSelecionarAba = (chave: Chave) => {
     if (chave === abaAtiva) return;
@@ -489,13 +492,15 @@ useEffect(() => {
                     <RefreshCw className="w-4 h-4" />
                   </button>
 
-                  <button
-                    onClick={() => router.push(config.rotaNova)}
-                    className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg font-bold transition flex items-center gap-2"
-                  >
-                    <Plus className="w-4 h-4" />
-                    <span className="hidden sm:inline">Novo</span>
-                  </button>
+                  {config.permiteCriar !== false && (
+                    <button
+                      onClick={() => router.push(config.rotaNova)}
+                      className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg font-bold transition flex items-center gap-2"
+                    >
+                      <Plus className="w-4 h-4" />
+                      <span className="hidden sm:inline">Novo</span>
+                    </button>
+                  )}
                 </div>
               </div>
 
@@ -550,16 +555,8 @@ useEffect(() => {
                         return (
                           <tr
                             key={id}
-                            onClick={() => {
-                              if (abaAtiva === "contas") {
-                                router.push(`/funcionarios/listarContas/${id}`);
-                              }
-                            }}
-                            className={`border-b border-red-500/5 transition ${
-                              abaAtiva === "contas"
-                                ? "cursor-pointer hover:bg-red-500/10"
-                                : "hover:bg-red-500/5"
-                            }`}
+                            onClick={() => router.push(config.rotaDetalhes(id))}
+                            className="border-b border-red-500/5 transition cursor-pointer hover:bg-red-500/10"
                           >
                             {config.colunas.map((coluna) => (
                               <td
@@ -572,20 +569,20 @@ useEffect(() => {
                             <td className="px-6 py-4">
                               <div className="flex items-center justify-end gap-2">
                                 <button
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      router.push(config.rotaEditar(id));
-                                    }}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    router.push(config.rotaEditar(id));
+                                  }}
                                   className="p-2 text-gray-400 hover:text-white hover:bg-white/10 rounded-lg transition"
                                   aria-label={`Editar ${config.labelSingular}`}
                                 >
                                   <Pencil className="w-4 h-4" />
                                 </button>
                                 <button
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      handleExcluir(item);
-                                    }}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleExcluir(item);
+                                  }}
                                   disabled={excluindoId === id}
                                   className="p-2 text-gray-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition disabled:opacity-50"
                                   aria-label={`Excluir ${config.labelSingular}`}
