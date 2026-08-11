@@ -95,6 +95,7 @@ export default function ExtratoPage() {
       SAQUE: 'Saque',
       TRANSFERENCIA: 'Transferência',
       PAGAMENTO: 'Pagamento',
+      RENDIMENTO: 'Rendimento',
     };
     return labels[tipo] || tipo;
   };

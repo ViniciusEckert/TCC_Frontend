@@ -44,7 +44,7 @@ interface Conta {
     id: number;
     tipo: string;
     valor: number | string;
-    dataTransacao: string;
+    data: string;
   }[];
 }
 
@@ -374,7 +374,7 @@ export default function ContaDetalhesPage() {
 
                     <p className="text-gray-400">
                       {new Date(
-                        transacao.dataTransacao
+                        transacao.data
                       ).toLocaleString('pt-BR')}
                     </p>
                   </div>

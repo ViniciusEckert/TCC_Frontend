@@ -74,12 +74,20 @@ interface TransacaoBruta {
   tipo: string;
   valor: number | string;
   descricao?: string;
-  dataTransacao: string;
+  data: string; // clientesController.getById formata o campo com este nome
+  contaOrigemId?: number | null;
+  contaDestinoId?: number | null;
 }
 
 // Reaproveita o getCliente (que já traz as contas com as transações
 // aninhadas) e normaliza os campos numéricos, já que o backend pode
 // devolver saldo/valor como string (Decimal do Prisma serializado).
+//
+// O valor gravado no banco é sempre positivo (o controller de
+// transações não grava valor negativo em nenhum tipo, nem em
+// TRANSFERENCIA). Quem sai do positivo/negativo é o frontend: se esta
+// conta é a origem da transação, o valor é uma saída (negativo); se é
+// o destino, é uma entrada (positivo).
 export async function buscarContas(
   clienteId: number
 ): Promise<BuscarContasResultado> {
@@ -98,13 +106,18 @@ export async function buscarContas(
       data_abertura: conta.data_abertura,
       pix: conta.pix,
       transacoes: Array.isArray(conta.transacoes)
-        ? conta.transacoes.map((t) => ({
-            id: t.id,
-            tipo: t.tipo,
-            valor: Number(t.valor),
-            descricao: t.descricao,
-            dataTransacao: t.dataTransacao,
-          }))
+        ? conta.transacoes.map((t) => {
+            const valorAbsoluto = Math.abs(Number(t.valor));
+            const ehSaida = Number(t.contaOrigemId) === conta.id;
+
+            return {
+              id: t.id,
+              tipo: t.tipo,
+              valor: ehSaida ? -valorAbsoluto : valorAbsoluto,
+              descricao: t.descricao,
+              dataTransacao: t.data,
+            };
+          })
         : [],
     }));
 

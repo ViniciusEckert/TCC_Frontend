@@ -174,6 +174,7 @@ export default function DashboardPage() {
       SAQUE: 'Saque',
       TRANSFERENCIA: 'Transferência',
       PAGAMENTO: 'Pagamento',
+      RENDIMENTO: 'Rendimento',
     };
     return labels[tipo] || tipo;
   };
@@ -453,7 +454,7 @@ export default function DashboardPage() {
         {/* FOOTER */}
         <footer className="border-t border-red-500/10 px-6 py-8 mt-8">
           <div className="max-w-7xl mx-auto text-center text-gray-500 text-sm">
-            <p>© 2024 FinanceBank. Todos os direitos reservados. | Segurança 24/7</p>
+            <p>© 2024 ForjaBank. Todos os direitos reservados. | Segurança 24/7</p>
           </div>
         </footer>
       </main>

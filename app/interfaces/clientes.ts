@@ -23,7 +23,7 @@ export interface Cartao {
 export interface Transacao {
   id: string;
   valor: number; // positivo = entrada, negativo = saída
-  tipo: "DEPOSITO" | "SAQUE" | "TRANSFERENCIA" | "PAGAMENTO";
+  tipo: "DEPOSITO" | "SAQUE" | "TRANSFERENCIA" | "PAGAMENTO" | "RENDIMENTO";
   data: string; // ISO 8601
   descricao?: string
 }
