@@ -8,7 +8,6 @@ import {
   UserCog,
   Wallet,
   Building2,
-  CreditCard,
   ArrowLeftRight,
   Settings,
   Bell,
@@ -32,8 +31,6 @@ import {
   excluirConta,
   listarAgencias,
   excluirAgencia,
-  listarCartoes,
-  excluirCartao,
   listarTransacoes,
   excluirTransacao,
 } from './actions';
@@ -52,7 +49,6 @@ type Chave =
   | 'funcionarios'
   | 'contas'
   | 'agencias'
-  | 'cartoes'
   | 'transacoes';
 
 interface Coluna {
@@ -85,9 +81,6 @@ const texto = (valor: unknown): string => {
   return String(valor);
 };
 
-const paraObjeto = (valor: unknown): Registro | undefined =>
-  typeof valor === 'object' && valor !== null ? (valor as Registro) : undefined;
-
 const paraArray = (valor: unknown): Registro[] =>
   Array.isArray(valor) ? (valor as Registro[]) : [];
 
@@ -117,7 +110,7 @@ const ABAS: AbaConfig[] = [
     icon: Users,
     listar: listarClientes,
     excluir: excluirCliente,
-    rotaNova: '/funcionarios/criarCliente',
+    rotaNova: '/funcionarios/[id]/dashboard/criarCliente',
     rotaEditar: (id) => `/funcionarios/cliente/${id}`,
     rotaDetalhes: (id) => `/funcionarios/detalhes/listarClientes/${id}`,
     buscaCampos: ['nome', 'email', 'cpf'],
@@ -136,7 +129,7 @@ const ABAS: AbaConfig[] = [
     icon: UserCog,
     listar: listarFuncionarios,
     excluir: excluirFuncionario,
-    rotaNova: '/funcionarios/criarFuncionario',
+    rotaNova: '/funcionarios/[id]/dashboard/criarFuncionario',
     rotaEditar: (id) => `/funcionarios/funcionario/${id}`,
     rotaDetalhes: (id) => `/funcionarios/detalhes/listarFuncionarios/${id}`,
     buscaCampos: ['nome', 'email'],
@@ -174,7 +167,7 @@ const ABAS: AbaConfig[] = [
     icon: Wallet,
     listar: listarContas,
     excluir: excluirConta,
-    rotaNova: '/funcionarios/criarConta',
+    rotaNova: '/funcionarios/[id]/dashboard/criarConta',
     rotaEditar: (id) => `/funcionarios/conta/${id}`,
     rotaDetalhes: (id) => `/funcionarios/detalhes/listarContas/${id}`,
     buscaCampos: ['tipo_conta', 'cliente_nome'],
@@ -203,7 +196,7 @@ const ABAS: AbaConfig[] = [
     icon: Building2,
     listar: listarAgencias,
     excluir: excluirAgencia,
-    rotaNova: '/funcionario/agencias/novo',
+    rotaNova: '/funcionarios/[id]/dashboard/criarAgencia',
     rotaEditar: (id) => `/funcionario/agencias/${id}`,
     rotaDetalhes: (id) => `/funcionarios/detalhes/listarAgencias/${id}`,
     buscaCampos: ['nome', 'numero', 'endereco'],
@@ -211,33 +204,6 @@ const ABAS: AbaConfig[] = [
       { header: 'Nome', render: (i) => texto(i.nome) },
       { header: 'Número', render: (i) => texto(i.numero) },
       { header: 'Endereço', render: (i) => texto(i.endereco) },
-    ],
-  },
-  {
-    chave: 'cartoes',
-    label: 'Cartões',
-    labelSingular: 'cartão',
-    icon: CreditCard,
-    listar: listarCartoes,
-    excluir: excluirCartao,
-    rotaNova: '/funcionarios/criarCartao',
-    rotaEditar: (id) => `/funcionarios/cartao/${id}`,
-    rotaDetalhes: (id) => `/funcionarios/detalhes/listarCartoes/${id}`,
-    buscaCampos: ['numero_cartao', 'tipoCartao'],
-    colunas: [
-      {
-        header: 'Número',
-        render: (i) => `•••• •••• •••• ${texto(i.numero_cartao).slice(-4)}`,
-      },
-      {
-        header: 'Tipo',
-        render: (i) => (i.tipo_cartao === 'DEBITO' ? 'Débito' : 'Crédito'),
-      },
-      { header: 'Validade', render: (i) => formatarData(i.validade) },
-      {
-        header: 'Conta',
-        render: (i) => texto(paraObjeto(i.conta)?.id ?? i.contaId),
-      },
     ],
   },
   {
@@ -428,7 +394,7 @@ export default function PainelFuncionarioPage() {
               Central de Gestão 🛠️
             </h1>
             <p className="text-gray-400">
-              Gerencie clientes, contas, agências, cartões e transações do banco.
+              Gerencie clientes, contas, agências e transações do banco.
             </p>
           </div>
         </section>
@@ -436,7 +402,7 @@ export default function PainelFuncionarioPage() {
         {/* ABAS */}
         <section className="px-6">
           <div className="max-w-7xl mx-auto">
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3 mb-8">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 mb-8">
               {ABAS.map((aba) => {
                 const Icon = aba.icon;
                 const ativo = aba.chave === abaAtiva;
