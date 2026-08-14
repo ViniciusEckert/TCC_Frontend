@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
 import React, { useEffect, useMemo, useState } from 'react';
 import {
   Shield,
@@ -35,6 +35,9 @@ const TIPOS_CONTA: { value: TipoConta; label: string; desc: string }[] = [
 
 export default function CriarContaFuncionarioPage() {
   const router = useRouter();
+  const params = useParams();
+
+  const funcionarioId = params.id as string;
 
   const [carregandoClientes, setCarregandoClientes] = useState(true);
   const [clientes, setClientes] = useState<ClienteResumo[]>([]);
@@ -115,41 +118,47 @@ export default function CriarContaFuncionarioPage() {
   }
 
   async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    setError(null);
+  e.preventDefault();
+  setError(null);
 
-    const validationError = validateForm();
-    if (validationError) {
-      setError(validationError);
+  const validationError = validateForm();
+
+  if (validationError) {
+    setError(validationError);
+    return;
+  }
+
+  setLoading(true);
+
+  try {
+    const conta = await criarContaFuncionario({
+      tipo_conta: form.tipo_conta as TipoConta,
+      saldo: form.saldo ? Number(form.saldo) : 0,
+      data_abertura: form.data_abertura || undefined,
+      agenciaId: form.agenciaId
+        ? Number(form.agenciaId)
+        : undefined,
+      clienteIds: selecionados.map((c) => c.id),
+    });
+
+    if (!conta) {
+      setError('Não foi possível abrir a conta. Tente novamente.');
       return;
     }
 
-    setLoading(true);
-    try {
-      const conta = await criarContaFuncionario({
-        tipo_conta: form.tipo_conta as TipoConta,
-        saldo: form.saldo ? Number(form.saldo) : 0,
-        data_abertura: form.data_abertura || undefined,
-        agenciaId: form.agenciaId ? Number(form.agenciaId) : undefined,
-        clienteIds: selecionados.map((c) => c.id),
-      });
+    // VOLTA PARA O DASHBOARD DO FUNCIONÁRIO ATUAL
+    router.push(`/funcionarios/${funcionarioId}/dashboard`);
 
-      if (!conta) {
-        setError('Não foi possível abrir a conta. Tente novamente.');
-        return;
-      }
-
-      router.push('/funcionarios');
-    } catch (err) {
-      setError(
-        err instanceof Error
-          ? err.message
-          : 'Serviço indisponível. Tente novamente em instantes.'
-      );
-    } finally {
-      setLoading(false);
-    }
+  } catch (err) {
+    setError(
+      err instanceof Error
+        ? err.message
+        : 'Serviço indisponível. Tente novamente em instantes.'
+    );
+  } finally {
+    setLoading(false);
   }
+}
 
   return (
     <div className="min-h-screen bg-linear-to-b from-red-950 via-red-900 to-black flex flex-col overflow-hidden">
@@ -171,7 +180,7 @@ export default function CriarContaFuncionarioPage() {
           </span>
         </Link>
         <Link
-          href="/funcionarios"
+           href={`/funcionarios/${funcionarioId}/dashboard`}
           className="text-sm text-gray-300 hover:text-red-400 flex items-center gap-1 transition"
         >
           <ChevronLeft size={14} /> Voltar ao painel
