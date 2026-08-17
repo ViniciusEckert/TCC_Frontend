@@ -264,7 +264,7 @@ const criarAbas = (funcionarioId: string): AbaConfig[] => [
     rotaEditar: (id) =>
       `/funcionarios/${funcionarioId}/dashboard/conta/${id}/editar`,
 
-    rotaDetalhes: (id) => `/funcionarios/detalhes/listarContas/${id}`,
+    rotaDetalhes: (id) => `/funcionarios/detalhes/ListarContas/${id}`,
 
     buscaCampos: ["tipo_conta", "cliente_nome"],
 
