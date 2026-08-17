@@ -4,22 +4,23 @@ import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import {
   ArrowLeft,
-  Building2,
-  MapPin,
-  Hash,
-  Wallet,
-  Users,
-  Shield,
+  User,
   Mail,
+  Wallet,
+  Phone,
+  FileText,
+  Calendar,
 } from 'lucide-react';
 
-import { buscarAgencia } from '../../../[id]/dashboard/actions';
+import { buscarCliente } from '../../../[id]/dashboard/actions';
 
-interface Agencia {
+interface Cliente {
   id: number;
   nome: string;
-  numero: string;
-  endereco: string;
+  email: string;
+  cpf: string;
+  telefone: string;
+  data_nascimento: string;
 
   contas: {
     id: number;
@@ -28,20 +29,13 @@ interface Agencia {
     pix?: string | null;
     data_abertura: string;
   }[];
-
-  funcionarios: {
-    id: number;
-    nome: string;
-    email: string;
-    admin: boolean;
-  }[];
 }
 
-export default function AgenciaDetalhesPage() {
+export default function ClienteDetalhesPage() {
   const router = useRouter();
   const params = useParams();
 
-  const [agencia, setAgencia] = useState<Agencia | null>(null);
+  const [cliente, setCliente] = useState<Cliente | null>(null);
   const [loading, setLoading] = useState(true);
   const [erro, setErro] = useState<string | null>(null);
 
@@ -54,11 +48,11 @@ export default function AgenciaDetalhesPage() {
 
     async function carregar() {
       try {
-        const dados = await buscarAgencia(id);
-        setAgencia(dados);
+        const dados = await buscarCliente(id);
+        setCliente(dados);
       } catch (error) {
-        console.error('Erro ao buscar agencia:', error);
-        setErro('Não foi possível carregar os dados da agencia.');
+        console.error('Erro ao buscar cliente:', error);
+        setErro('Não foi possível carregar os dados do cliente.');
       } finally {
         setLoading(false);
       }
@@ -73,7 +67,7 @@ export default function AgenciaDetalhesPage() {
         <div className="max-w-7xl mx-auto p-8">
 
           <p className="mb-6">
-            ID da agência inválido.
+            ID do cliente inválido.
           </p>
 
           <button
@@ -93,19 +87,19 @@ export default function AgenciaDetalhesPage() {
     return (
       <div className="min-h-screen bg-[#0a0a0a] text-white">
         <div className="max-w-7xl mx-auto p-8">
-          Carregando agência...
+          Carregando cliente...
         </div>
       </div>
     );
   }
 
-  if (erro || !agencia) {
+  if (erro || !cliente) {
     return (
       <div className="min-h-screen bg-[#0a0a0a] text-white">
         <div className="max-w-7xl mx-auto p-8">
 
           <p className="mb-6">
-            {erro || 'Agência não encontrada.'}
+            {erro || 'Cliente não encontrado.'}
           </p>
 
           <button
@@ -140,7 +134,7 @@ export default function AgenciaDetalhesPage() {
 
           <div className="flex items-center gap-4 mb-8">
 
-            <Building2
+            <User
               size={40}
               className="text-red-400"
             />
@@ -148,11 +142,11 @@ export default function AgenciaDetalhesPage() {
             <div>
 
               <h1 className="text-3xl font-bold">
-                {agencia.nome}
+                {cliente.nome}
               </h1>
 
               <p className="text-gray-400">
-                Agência #{agencia.id}
+                Cliente #{cliente.id}
               </p>
 
             </div>
@@ -167,19 +161,19 @@ export default function AgenciaDetalhesPage() {
 
               <div className="flex items-center gap-2 mb-2">
 
-                <Hash
+                <Mail
                   size={18}
                   className="text-red-400"
                 />
 
                 <p className="text-gray-400">
-                  Número
+                  Email
                 </p>
 
               </div>
 
               <p>
-                {agencia.numero}
+                {cliente.email}
               </p>
 
             </div>
@@ -188,19 +182,63 @@ export default function AgenciaDetalhesPage() {
 
               <div className="flex items-center gap-2 mb-2">
 
-                <MapPin
+                <FileText
                   size={18}
                   className="text-red-400"
                 />
 
                 <p className="text-gray-400">
-                  Endereço
+                  CPF
                 </p>
 
               </div>
 
               <p>
-                {agencia.endereco}
+                {cliente.cpf}
+              </p>
+
+            </div>
+
+            <div className="bg-black/20 rounded-xl p-5">
+
+              <div className="flex items-center gap-2 mb-2">
+
+                <Phone
+                  size={18}
+                  className="text-red-400"
+                />
+
+                <p className="text-gray-400">
+                  Telefone
+                </p>
+
+              </div>
+
+              <p>
+                {cliente.telefone || 'Não informado'}
+              </p>
+
+            </div>
+
+            <div className="bg-black/20 rounded-xl p-5">
+
+              <div className="flex items-center gap-2 mb-2">
+
+                <Calendar
+                  size={18}
+                  className="text-red-400"
+                />
+
+                <p className="text-gray-400">
+                  Data de nascimento
+                </p>
+
+              </div>
+
+              <p>
+                {new Date(
+                  cliente.data_nascimento
+                ).toLocaleDateString('pt-BR')}
               </p>
 
             </div>
@@ -216,7 +254,7 @@ export default function AgenciaDetalhesPage() {
               Contas
             </h2>
 
-            {!agencia.contas || agencia.contas.length === 0 ? (
+            {cliente.contas.length === 0 ? (
 
               <p className="text-gray-400">
                 Nenhuma conta vinculada.
@@ -224,7 +262,7 @@ export default function AgenciaDetalhesPage() {
 
             ) : (
 
-              agencia.contas.map((conta) => (
+              cliente.contas.map((conta) => (
 
                 <div
                   key={conta.id}
@@ -272,68 +310,6 @@ export default function AgenciaDetalhesPage() {
                         conta.data_abertura
                       ).toLocaleDateString('pt-BR')}
                     </p>
-
-                  </div>
-
-                </div>
-
-              ))
-
-            )}
-
-          </div>
-
-          {/* FUNCIONÁRIOS */}
-
-          <div className="mt-10">
-
-            <h2 className="text-xl font-bold flex items-center gap-2 mb-4">
-              <Users />
-              Funcionários
-            </h2>
-
-            {!agencia.funcionarios || agencia.funcionarios.length === 0 ? (
-
-              <p className="text-gray-400">
-                Nenhum funcionário vinculado.
-              </p>
-
-            ) : (
-
-              agencia.funcionarios.map((funcionario) => (
-
-                <div
-                  key={funcionario.id}
-                  className="bg-black/20 rounded-xl p-4 mb-3"
-                >
-
-                  <div className="flex justify-between items-center">
-
-                    <div>
-
-                      <p className="font-bold">
-                        {funcionario.nome}
-                      </p>
-
-                      <div className="flex items-center gap-2 text-gray-400 text-sm mt-1">
-                        <Mail size={14} />
-                        <p>
-                          {funcionario.email}
-                        </p>
-                      </div>
-
-                    </div>
-
-                    <div className="text-right">
-
-                      {funcionario.admin && (
-                        <span className="flex items-center gap-1 text-red-400 text-sm font-bold">
-                          <Shield size={14} />
-                          Admin
-                        </span>
-                      )}
-
-                    </div>
 
                   </div>
 

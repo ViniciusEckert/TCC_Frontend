@@ -15,7 +15,7 @@ import {
 
 import { buscarAgencia } from '../../../[id]/dashboard/actions';
 
-export interface Agencia {
+interface Agencia {
   id: number;
   nome: string;
   numero: string;
@@ -23,18 +23,17 @@ export interface Agencia {
 
   contas: {
     id: number;
-    senha: string;
-    tipo_conta: "CORRENTE" | "POUPANCA" | "UNIVERSITARIA" | "SALARIO";
-    saldo: number;
-    data_abertura: Date;
-    pix: string;
+    tipo_conta: string;
+    saldo: number | string;
+    pix?: string | null;
+    data_abertura: string;
   }[];
+
   funcionarios: {
     id: number;
     nome: string;
     email: string;
     admin: boolean;
-    senha: string;
   }[];
 }
 
@@ -94,7 +93,7 @@ export default function AgenciaDetalhesPage() {
     return (
       <div className="min-h-screen bg-[#0a0a0a] text-white">
         <div className="max-w-7xl mx-auto p-8">
-          Carregando Agencia...
+          Carregando agência...
         </div>
       </div>
     );
@@ -106,7 +105,7 @@ export default function AgenciaDetalhesPage() {
         <div className="max-w-7xl mx-auto p-8">
 
           <p className="mb-6">
-            {erro || 'Agencia não encontrada.'}
+            {erro || 'Agência não encontrada.'}
           </p>
 
           <button
@@ -217,7 +216,7 @@ export default function AgenciaDetalhesPage() {
               Contas
             </h2>
 
-            {agencia.contas.length === 0 ? (
+            {!agencia.contas || agencia.contas.length === 0 ? (
 
               <p className="text-gray-400">
                 Nenhuma conta vinculada.
@@ -293,7 +292,7 @@ export default function AgenciaDetalhesPage() {
               Funcionários
             </h2>
 
-            {agencia.funcionarios.length === 0 ? (
+            {!agencia.funcionarios || agencia.funcionarios.length === 0 ? (
 
               <p className="text-gray-400">
                 Nenhum funcionário vinculado.
