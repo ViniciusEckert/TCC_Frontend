@@ -1,11 +1,6 @@
-'use client';
+"use client";
 
-import React, {
-  useState,
-  useEffect,
-  useCallback,
-  useMemo,
-} from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 
 import {
   Shield,
@@ -15,8 +10,6 @@ import {
   Wallet,
   Building2,
   ArrowLeftRight,
-  Settings,
-  Bell,
   Loader2,
   AlertCircle,
   Plus,
@@ -25,10 +18,10 @@ import {
   Search,
   RefreshCw,
   Inbox,
-} from 'lucide-react';
+} from "lucide-react";
 
-import Link from 'next/link';
-import { useRouter, useParams } from 'next/navigation';
+import Link from "next/link";
+import { useRouter, useParams } from "next/navigation";
 
 import {
   listarClientes,
@@ -41,7 +34,7 @@ import {
   excluirAgencia,
   listarTransacoes,
   excluirTransacao,
-} from './actions';
+} from "./actions";
 
 /* ============================
         TIPOS
@@ -49,12 +42,7 @@ import {
 
 type Registro = Record<string, unknown>;
 
-type Chave =
-  | 'clientes'
-  | 'funcionarios'
-  | 'contas'
-  | 'agencias'
-  | 'transacoes';
+type Chave = "clientes" | "funcionarios" | "contas" | "agencias" | "transacoes";
 
 interface Coluna {
   header: string;
@@ -90,21 +78,15 @@ interface AbaConfig {
 ============================ */
 
 const texto = (valor: unknown): string => {
-  if (
-    valor === null ||
-    valor === undefined ||
-    valor === ''
-  ) {
-    return '—';
+  if (valor === null || valor === undefined || valor === "") {
+    return "—";
   }
 
   return String(valor);
 };
 
 const paraArray = (valor: unknown): Registro[] => {
-  return Array.isArray(valor)
-    ? (valor as Registro[])
-    : [];
+  return Array.isArray(valor) ? (valor as Registro[]) : [];
 };
 
 const paraId = (valor: unknown): number => {
@@ -112,18 +94,15 @@ const paraId = (valor: unknown): number => {
 };
 
 const formatarMoeda = (valor: unknown): string => {
-  return `R$ ${Number(valor ?? 0).toLocaleString(
-    'pt-BR',
-    {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    }
-  )}`;
+  return `R$ ${Number(valor ?? 0).toLocaleString("pt-BR", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })}`;
 };
 
 const formatarData = (valor: unknown): string => {
   if (!valor) {
-    return '—';
+    return "—";
   }
 
   const data = new Date(String(valor));
@@ -132,28 +111,24 @@ const formatarData = (valor: unknown): string => {
     return String(valor);
   }
 
-  return data.toLocaleDateString('pt-BR');
+  return data.toLocaleDateString("pt-BR");
 };
 
 /* ============================
         ABAS
 ============================ */
 
-
-
-const criarAbas = (
-  funcionarioId: string
-): AbaConfig[] => [
+const criarAbas = (funcionarioId: string): AbaConfig[] => [
   /* ============================
           CLIENTES
   ============================ */
 
   {
-    chave: 'clientes',
+    chave: "clientes",
 
-    label: 'Clientes',
+    label: "Clientes",
 
-    labelSingular: 'cliente',
+    labelSingular: "cliente",
 
     icon: Users,
 
@@ -161,50 +136,39 @@ const criarAbas = (
 
     excluir: excluirCliente,
 
-    rotaNova:
-      `/funcionarios/${funcionarioId}/dashboard/criarCliente`,
+    rotaNova: `/funcionarios/${funcionarioId}/dashboard/criarCliente`,
 
     rotaEditar: (id) =>
-      `/funcionarios/${funcionarioId}/dashboard/cliente/${id}`,
+      `/funcionarios/${funcionarioId}/dashboard/cliente/${id}/editar`,
 
-    rotaDetalhes: (id) =>
-      `/funcionarios/${funcionarioId}/dashboard/detalhes/listarClientes/${id}`,
+    rotaDetalhes: (id) => `/funcionarios/detalhes/listarClientes/${id}`,
 
-    buscaCampos: [
-      'nome',
-      'email',
-      'cpf',
-    ],
+    buscaCampos: ["nome", "email", "cpf"],
 
     colunas: [
       {
-        header: 'Nome',
-        render: (i) =>
-          texto(i.nome),
+        header: "Nome",
+        render: (i) => texto(i.nome),
       },
 
       {
-        header: 'Email',
-        render: (i) =>
-          texto(i.email),
+        header: "Email",
+        render: (i) => texto(i.email),
       },
 
       {
-        header: 'CPF',
-        render: (i) =>
-          texto(i.cpf),
+        header: "CPF",
+        render: (i) => texto(i.cpf),
       },
 
       {
-        header: 'Telefone',
-        render: (i) =>
-          texto(i.telefone),
+        header: "Telefone",
+        render: (i) => texto(i.telefone),
       },
 
       {
-        header: 'Nascimento',
-        render: (i) =>
-          formatarData(i.data_nascimento),
+        header: "Nascimento",
+        render: (i) => formatarData(i.data_nascimento),
       },
     ],
   },
@@ -214,11 +178,11 @@ const criarAbas = (
   ============================ */
 
   {
-    chave: 'funcionarios',
+    chave: "funcionarios",
 
-    label: 'Funcionários',
+    label: "Funcionários",
 
-    labelSingular: 'funcionário',
+    labelSingular: "funcionário",
 
     icon: UserCog,
 
@@ -226,69 +190,53 @@ const criarAbas = (
 
     excluir: excluirFuncionario,
 
-    rotaNova:
-      `/funcionarios/${funcionarioId}/dashboard/criarFuncionario`,
+    rotaNova: `/funcionarios/${funcionarioId}/dashboard/criarFuncionario`,
 
     rotaEditar: (id) =>
-      `/funcionarios/${funcionarioId}/dashboard/funcionario/${id}`,
+      `/funcionarios/${funcionarioId}/dashboard/funcionario/${id}/editar`,
 
-    rotaDetalhes: (id) =>
-      `/funcionarios/${funcionarioId}/dashboard/detalhes/listarFuncionarios/${id}`,
+    rotaDetalhes: (id) => `/funcionarios/detalhes/listarFuncionarios/${id}`,
 
-    buscaCampos: [
-      'nome',
-      'email',
-    ],
+    buscaCampos: ["nome", "email"],
 
     colunas: [
       {
-        header: 'Nome',
-        render: (i) =>
-          texto(i.nome),
+        header: "Nome",
+        render: (i) => texto(i.nome),
       },
 
       {
-        header: 'Email',
-        render: (i) =>
-          texto(i.email),
+        header: "Email",
+        render: (i) => texto(i.email),
       },
 
       {
-        header: 'Perfil',
+        header: "Perfil",
 
         render: (i) => (
           <span
             className={`px-2 py-1 rounded-full text-xs font-bold ${
               i.admin
-                ? 'bg-red-500/20 text-red-300 border border-red-500/30'
-                : 'bg-gray-500/20 text-gray-300 border border-gray-500/30'
+                ? "bg-red-500/20 text-red-300 border border-red-500/30"
+                : "bg-gray-500/20 text-gray-300 border border-gray-500/30"
             }`}
           >
-            {i.admin
-              ? 'Administrador'
-              : 'Atendente'}
+            {i.admin ? "Administrador" : "Atendente"}
           </span>
         ),
       },
 
       {
-        header: 'Agências',
+        header: "Agências",
 
         render: (i) => {
-          const agencias =
-            paraArray(i.agencias);
+          const agencias = paraArray(i.agencias);
 
           if (agencias.length === 0) {
-            return '—';
+            return "—";
           }
 
-          return agencias
-            .map((a) =>
-              texto(
-                a.nome ?? a.id
-              )
-            )
-            .join(', ');
+          return agencias.map((a) => texto(a.nome ?? a.id)).join(", ");
         },
       },
     ],
@@ -299,11 +247,11 @@ const criarAbas = (
   ============================ */
 
   {
-    chave: 'contas',
+    chave: "contas",
 
-    label: 'Contas',
+    label: "Contas",
 
-    labelSingular: 'conta',
+    labelSingular: "conta",
 
     icon: Wallet,
 
@@ -311,61 +259,46 @@ const criarAbas = (
 
     excluir: excluirConta,
 
-    rotaNova:
-      `/funcionarios/${funcionarioId}/dashboard/criarConta`,
+    rotaNova: `/funcionarios/${funcionarioId}/dashboard/criarConta`,
 
     rotaEditar: (id) =>
-      `/funcionarios/${funcionarioId}/dashboard/conta/${id}`,
+      `/funcionarios/${funcionarioId}/dashboard/conta/${id}/editar`,
 
-    rotaDetalhes: (id) =>
-      `/funcionarios/${funcionarioId}/dashboard/detalhes/listarContas/${id}`,
+    rotaDetalhes: (id) => `/funcionarios/detalhes/listarContas/${id}`,
 
-    buscaCampos: [
-      'tipo_conta',
-      'cliente_nome',
-    ],
+    buscaCampos: ["tipo_conta", "cliente_nome"],
 
     colunas: [
       {
-        header: 'ID',
+        header: "ID",
 
-        render: (i) =>
-          `#${texto(i.id)}`,
+        render: (i) => `#${texto(i.id)}`,
       },
 
       {
-        header: 'Tipo',
+        header: "Tipo",
 
-        render: (i) =>
-          texto(i.tipo_conta),
+        render: (i) => texto(i.tipo_conta),
       },
 
       {
-        header: 'Cliente',
+        header: "Cliente",
 
         render: (i) => {
-          const clientes =
-            paraArray(i.clientes);
+          const clientes = paraArray(i.clientes);
 
           if (clientes.length === 0) {
-            return '—';
+            return "—";
           }
 
-          return clientes
-            .map((c) =>
-              texto(c.nome)
-            )
-            .join(', ');
+          return clientes.map((c) => texto(c.nome)).join(", ");
         },
       },
 
       {
-        header: 'Aberta em',
+        header: "Aberta em",
 
-        render: (i) =>
-          formatarData(
-            i.data_abertura
-          ),
+        render: (i) => formatarData(i.data_abertura),
       },
     ],
   },
@@ -375,11 +308,11 @@ const criarAbas = (
   ============================ */
 
   {
-    chave: 'agencias',
+    chave: "agencias",
 
-    label: 'Agências',
+    label: "Agências",
 
-    labelSingular: 'agência',
+    labelSingular: "agência",
 
     icon: Building2,
 
@@ -387,41 +320,32 @@ const criarAbas = (
 
     excluir: excluirAgencia,
 
-    rotaNova:
-      `/funcionarios/${funcionarioId}/dashboard/criarAgencia`,
+    rotaNova: `/funcionarios/${funcionarioId}/dashboard/criarAgencia`,
 
     rotaEditar: (id) =>
-      `/funcionarios/${funcionarioId}/dashboard/agencias/${id}`,
+      `/funcionarios/${funcionarioId}/dashboard/agencia/${id}/editar`,
 
-    rotaDetalhes: (id) =>
-      `/funcionarios/${funcionarioId}/dashboard/detalhes/listarAgencias/${id}`,
+    rotaDetalhes: (id) => `/funcionarios/detalhes/listarAgencia/${id}`,
 
-    buscaCampos: [
-      'nome',
-      'numero',
-      'endereco',
-    ],
+    buscaCampos: ["nome", "numero", "endereco"],
 
     colunas: [
       {
-        header: 'Nome',
+        header: "Nome",
 
-        render: (i) =>
-          texto(i.nome),
+        render: (i) => texto(i.nome),
       },
 
       {
-        header: 'Número',
+        header: "Número",
 
-        render: (i) =>
-          texto(i.numero),
+        render: (i) => texto(i.numero),
       },
 
       {
-        header: 'Endereço',
+        header: "Endereço",
 
-        render: (i) =>
-          texto(i.endereco),
+        render: (i) => texto(i.endereco),
       },
     ],
   },
@@ -431,11 +355,11 @@ const criarAbas = (
   ============================ */
 
   {
-    chave: 'transacoes',
+    chave: "transacoes",
 
-    label: 'Transações',
+    label: "Transações",
 
-    labelSingular: 'transação',
+    labelSingular: "transação",
 
     icon: ArrowLeftRight,
 
@@ -443,46 +367,36 @@ const criarAbas = (
 
     excluir: excluirTransacao,
 
-    rotaNova:
-      `/funcionarios/${funcionarioId}/dashboard/transacoes/novo`,
+    rotaNova: `/funcionarios/${funcionarioId}/dashboard/transacoes/novo`,
 
     rotaEditar: (id) =>
       `/funcionarios/${funcionarioId}/dashboard/transacoes/${id}`,
 
-    rotaDetalhes: (id) =>
-      `/funcionarios/${funcionarioId}/dashboard/detalhes/listarTransacoes/${id}`,
+    rotaDetalhes: (id) => `/funcionarios/detalhes/listarTransacoes/${id}`,
 
     permiteCriar: false,
 
-    buscaCampos: [
-      'tipo',
-    ],
+    buscaCampos: ["tipo"],
 
     colunas: [
       {
-        header: 'Tipo',
+        header: "Tipo",
 
-        render: (i) =>
-          texto(i.tipo),
+        render: (i) => texto(i.tipo),
       },
 
       {
-        header: 'Valor',
+        header: "Valor",
 
-        render: (i) =>
-          formatarMoeda(i.valor),
+        render: (i) => formatarMoeda(i.valor),
 
-        className:
-          'text-right font-bold',
+        className: "text-right font-bold",
       },
 
       {
-        header: 'Data',
+        header: "Data",
 
-        render: (i) =>
-          formatarData(
-            i.dataTransacao
-          ),
+        render: (i) => formatarData(i.dataTransacao),
       },
     ],
   },
@@ -509,89 +423,65 @@ export default function PainelFuncionarioPage() {
     "7"
   */
 
-  const funcionarioId =
-    String(params.id);
+  const funcionarioId = String(params.id);
 
   /* ============================
           ESTADOS
   ============================ */
 
-  const [abaAtiva, setAbaAtiva] =
-    useState<Chave>('clientes');
+  const [abaAtiva, setAbaAtiva] = useState<Chave>("clientes");
 
-  const [dados, setDados] =
-    useState<Registro[]>([]);
+  const [dados, setDados] = useState<Registro[]>([]);
 
-  const [carregando, setCarregando] =
-    useState(true);
+  const [carregando, setCarregando] = useState(true);
 
-  const [erro, setErro] =
-    useState<string | null>(null);
+  const [erro, setErro] = useState<string | null>(null);
 
-  const [busca, setBusca] =
-    useState('');
+  const [busca, setBusca] = useState("");
 
-  const [excluindoId, setExcluindoId] =
-    useState<number | null>(null);
+  const [excluindoId, setExcluindoId] = useState<number | null>(null);
 
   /* ============================
           CONFIGURAÇÃO
   ============================ */
 
   const ABAS = useMemo(
-    () =>
-      criarAbas(funcionarioId),
+    () => criarAbas(funcionarioId),
 
-    [funcionarioId]
+    [funcionarioId],
   );
 
   const config = useMemo(
-    () =>
-      ABAS.find(
-        (a) =>
-          a.chave === abaAtiva
-      )!,
+    () => ABAS.find((a) => a.chave === abaAtiva)!,
 
-    [ABAS, abaAtiva]
+    [ABAS, abaAtiva],
   );
 
   /* ============================
           CARREGAR DADOS
   ============================ */
 
-  const carregarDados =
-    useCallback(
-      async (
-        aba: AbaConfig
-      ) => {
-        try {
-          setCarregando(true);
+  const carregarDados = useCallback(
+    async (aba: AbaConfig) => {
+      try {
+        setCarregando(true);
 
-          setErro(null);
+        setErro(null);
 
-          const resultado =
-            await aba.listar();
+        const resultado = await aba.listar();
 
-          setDados(
-            Array.isArray(resultado)
-              ? resultado
-              : []
-          );
-        } catch (err) {
-          setErro(
-            err instanceof Error
-              ? err.message
-              : 'Erro ao carregar dados'
-          );
+        setDados(Array.isArray(resultado) ? resultado : []);
+      } catch (err) {
+        setErro(err instanceof Error ? err.message : "Erro ao carregar dados");
 
-          setDados([]);
-        } finally {
-          setCarregando(false);
-        }
-      },
+        setDados([]);
+      } finally {
+        setCarregando(false);
+      }
+    },
 
-      []
-    );
+    [],
+  );
 
   /* ============================
           EFFECT
@@ -606,28 +496,19 @@ export default function PainelFuncionarioPage() {
 
         setErro(null);
 
-        const resultado =
-          await config.listar();
+        const resultado = await config.listar();
 
         if (!ativo) {
           return;
         }
 
-        setDados(
-          Array.isArray(resultado)
-            ? resultado
-            : []
-        );
+        setDados(Array.isArray(resultado) ? resultado : []);
       } catch (err) {
         if (!ativo) {
           return;
         }
 
-        setErro(
-          err instanceof Error
-            ? err.message
-            : 'Erro ao carregar dados'
-        );
+        setErro(err instanceof Error ? err.message : "Erro ao carregar dados");
 
         setDados([]);
       } finally {
@@ -648,104 +529,73 @@ export default function PainelFuncionarioPage() {
         TROCAR ABA
   ============================ */
 
-  const handleSelecionarAba =
-    (chave: Chave) => {
-      if (
-        chave === abaAtiva
-      ) {
-        return;
-      }
+  const handleSelecionarAba = (chave: Chave) => {
+    if (chave === abaAtiva) {
+      return;
+    }
 
-      setBusca('');
+    setBusca("");
 
-      setAbaAtiva(chave);
-    };
+    setAbaAtiva(chave);
+  };
 
   /* ============================
             EXCLUIR
   ============================ */
 
-  const handleExcluir =
-    async (
-      item: Registro
-    ) => {
-      const id =
-        paraId(item.id);
+  const handleExcluir = async (item: Registro) => {
+    const id = paraId(item.id);
 
-      const confirmar =
-        window.confirm(
-          `Tem certeza que deseja excluir este ${config.labelSingular}?`
-        );
+    const confirmar = window.confirm(
+      `Tem certeza que deseja excluir este ${config.labelSingular}?`,
+    );
 
-      if (!confirmar) {
-        return;
-      }
+    if (!confirmar) {
+      return;
+    }
 
-      setExcluindoId(id);
+    setExcluindoId(id);
 
-      try {
-        await config.excluir(id);
+    try {
+      await config.excluir(id);
 
-        setDados(
-          (prev) =>
-            prev.filter(
-              (atual) =>
-                paraId(
-                  atual.id
-                ) !== id
-            )
-        );
-      } catch (err) {
-        alert(
-          err instanceof Error
-            ? err.message
-            : `Não foi possível excluir este ${config.labelSingular}. Tente novamente.`
-        );
-      } finally {
-        setExcluindoId(null);
-      }
-    };
+      setDados((prev) => prev.filter((atual) => paraId(atual.id) !== id));
+    } catch (err) {
+      alert(
+        err instanceof Error
+          ? err.message
+          : `Não foi possível excluir este ${config.labelSingular}. Tente novamente.`,
+      );
+    } finally {
+      setExcluindoId(null);
+    }
+  };
 
   /* ============================
             LOGOUT
   ============================ */
 
-  const handleLogout =
-    () => {
-      router.push('/login');
-    };
+  const handleLogout = () => {
+    router.push("/login");
+  };
 
   /* ============================
           FILTRO
   ============================ */
 
-  const dadosFiltrados =
-    useMemo(() => {
-      if (!busca.trim()) {
-        return dados;
-      }
+  const dadosFiltrados = useMemo(() => {
+    if (!busca.trim()) {
+      return dados;
+    }
 
-      const termo =
-        busca
-          .trim()
-          .toLowerCase();
+    const termo = busca.trim().toLowerCase();
 
-      return dados.filter(
-        (item) =>
-          config.buscaCampos.some(
-            (campo) =>
-              texto(
-                item[campo]
-              )
-                .toLowerCase()
-                .includes(termo)
-          )
-      );
-    }, [
-      dados,
-      busca,
-      config,
-    ]);
+    return dados.filter((item) =>
+      config.buscaCampos.some((campo) =>
+        texto(item[campo]).toLowerCase().includes(termo),
+      ),
+    );
+  }, [dados, busca, config]);
 
   /* ============================
               JSX
@@ -753,17 +603,14 @@ export default function PainelFuncionarioPage() {
 
   return (
     <div className="min-h-screen bg-linear-to-b from-red-950 via-red-900 to-black">
-
       {/* ============================
           BACKGROUND
       ============================ */}
 
       <div className="fixed inset-0 pointer-events-none">
-
         <div className="absolute w-96 h-96 bg-linear-to-br from-red-500/10 to-pink-500/10 rounded-full blur-3xl top-[10%] left-[5%] animate-pulse" />
 
         <div className="absolute w-96 h-96 bg-linear-to-br from-pink-500/10 to-red-500/10 rounded-full blur-3xl bottom-[20%] right-[5%] animate-pulse" />
-
       </div>
 
       {/* ============================
@@ -771,54 +618,19 @@ export default function PainelFuncionarioPage() {
       ============================ */}
 
       <nav className="relative z-10 w-full px-6 py-4 flex justify-between items-center bg-red-950/60 backdrop-blur border-b border-red-500/10">
-
-        <Link
-          href="/"
-          className="flex items-center gap-2"
-        >
-
+        <Link href="/" className="flex items-center gap-2">
           <div className="w-10 h-10 bg-linear-to-br from-red-500 to-red-700 rounded-lg flex items-center justify-center">
-
             <Shield className="text-white w-6 h-6" />
-
           </div>
 
-          <span className="text-white font-bold text-xl">
-            ForjaBank
-          </span>
+          <span className="text-white font-bold text-xl">ForjaBank</span>
 
           <span className="text-gray-400 text-sm ml-2 hidden sm:inline">
             Painel do Funcionário
           </span>
-
         </Link>
 
         <div className="flex items-center gap-4">
-
-          {/* NOTIFICAÇÕES */}
-
-          <button
-            className="relative p-2 text-gray-400 hover:text-white transition"
-            type="button"
-          >
-
-            <Bell className="w-6 h-6" />
-
-            <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full" />
-
-          </button>
-
-          {/* CONFIGURAÇÕES */}
-
-          <button
-            className="p-2 text-gray-400 hover:text-white transition"
-            type="button"
-          >
-
-            <Settings className="w-6 h-6" />
-
-          </button>
-
           {/* LOGOUT */}
 
           <button
@@ -826,15 +638,10 @@ export default function PainelFuncionarioPage() {
             className="px-4 py-2 bg-red-500/10 border border-red-500/30 text-red-300 rounded-lg hover:bg-red-500/20 transition flex items-center gap-2"
             type="button"
           >
-
             <LogOut className="w-4 h-4" />
-
             Sair
-
           </button>
-
         </div>
-
       </nav>
 
       {/* ============================
@@ -842,13 +649,10 @@ export default function PainelFuncionarioPage() {
       ============================ */}
 
       <main className="relative z-10">
-
         {/* CABEÇALHO */}
 
         <section className="px-6 py-8">
-
           <div className="max-w-7xl mx-auto">
-
             <h1 className="text-3xl font-bold text-white mb-2">
               Central de Gestão 🛠️
             </h1>
@@ -856,9 +660,7 @@ export default function PainelFuncionarioPage() {
             <p className="text-gray-400">
               Gerencie clientes, contas, agências e transações do banco.
             </p>
-
           </div>
-
         </section>
 
         {/* ============================
@@ -866,52 +668,32 @@ export default function PainelFuncionarioPage() {
         ============================ */}
 
         <section className="px-6">
-
           <div className="max-w-7xl mx-auto">
-
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 mb-8">
+              {ABAS.map((aba) => {
+                const Icon = aba.icon;
 
-              {ABAS.map(
-                (aba) => {
+                const ativo = aba.chave === abaAtiva;
 
-                  const Icon =
-                    aba.icon;
+                return (
+                  <button
+                    key={aba.chave}
+                    onClick={() => handleSelecionarAba(aba.chave)}
+                    className={`rounded-xl p-4 font-bold transition flex flex-col items-center justify-center gap-2 border ${
+                      ativo
+                        ? "bg-linear-to-br from-red-500/30 to-pink-500/20 border-red-400 text-white"
+                        : "bg-red-900/20 border-red-500/10 text-gray-400 hover:border-red-500/30 hover:text-white"
+                    }`}
+                    type="button"
+                  >
+                    <Icon className="w-5 h-5" />
 
-                  const ativo =
-                    aba.chave ===
-                    abaAtiva;
-
-                  return (
-                    <button
-                      key={aba.chave}
-                      onClick={() =>
-                        handleSelecionarAba(
-                          aba.chave
-                        )
-                      }
-                      className={`rounded-xl p-4 font-bold transition flex flex-col items-center justify-center gap-2 border ${
-                        ativo
-                          ? 'bg-linear-to-br from-red-500/30 to-pink-500/20 border-red-400 text-white'
-                          : 'bg-red-900/20 border-red-500/10 text-gray-400 hover:border-red-500/30 hover:text-white'
-                      }`}
-                      type="button"
-                    >
-
-                      <Icon className="w-5 h-5" />
-
-                      <span className="text-sm">
-                        {aba.label}
-                      </span>
-
-                    </button>
-                  );
-                }
-              )}
-
+                    <span className="text-sm">{aba.label}</span>
+                  </button>
+                );
+              })}
             </div>
-
           </div>
-
         </section>
 
         {/* ============================
@@ -919,98 +701,62 @@ export default function PainelFuncionarioPage() {
         ============================ */}
 
         <section className="px-6 pb-16">
-
           <div className="max-w-7xl mx-auto">
-
             <div className="bg-red-900/20 border border-red-500/10 rounded-2xl overflow-hidden">
-
               {/* TOOLBAR */}
 
               <div className="p-6 border-b border-red-500/10 flex flex-col sm:flex-row gap-4 sm:items-center sm:justify-between">
-
                 <h2 className="text-xl font-bold text-white flex items-center gap-2">
-
-                  {React.createElement(
-                    config.icon,
-                    {
-                      className:
-                        'w-5 h-5 text-red-400',
-                    }
-                  )}
+                  {React.createElement(config.icon, {
+                    className: "w-5 h-5 text-red-400",
+                  })}
 
                   {config.label}
 
                   <span className="text-gray-500 text-sm font-normal">
                     ({dadosFiltrados.length})
                   </span>
-
                 </h2>
 
                 <div className="flex items-center gap-3">
-
                   {/* BUSCA */}
 
                   <div className="relative">
-
                     <Search className="w-4 h-4 text-gray-500 absolute left-3 top-1/2 -translate-y-1/2" />
 
                     <input
                       value={busca}
-                      onChange={(e) =>
-                        setBusca(
-                          e.target.value
-                        )
-                      }
+                      onChange={(e) => setBusca(e.target.value)}
                       placeholder={`Buscar ${config.label.toLowerCase()}...`}
                       className="pl-9 pr-3 py-2 bg-black/20 border border-red-500/20 rounded-lg text-white text-sm placeholder:text-gray-500 focus:outline-none focus:border-red-400 w-56"
                     />
-
                   </div>
 
                   {/* ATUALIZAR */}
 
                   <button
-                    onClick={() =>
-                      carregarDados(
-                        config
-                      )
-                    }
+                    onClick={() => carregarDados(config)}
                     className="p-2 text-gray-400 hover:text-white border border-red-500/20 rounded-lg hover:bg-red-500/10 transition"
                     aria-label="Atualizar"
                     type="button"
                   >
-
                     <RefreshCw className="w-4 h-4" />
-
                   </button>
 
                   {/* NOVO */}
 
-                  {config.permiteCriar !==
-                    false && (
-
+                  {config.permiteCriar !== false && (
                     <button
-                      onClick={() =>
-                        router.push(
-                          config.rotaNova
-                        )
-                      }
+                      onClick={() => router.push(config.rotaNova)}
                       className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg font-bold transition flex items-center gap-2"
                       type="button"
                     >
-
                       <Plus className="w-4 h-4" />
 
-                      <span className="hidden sm:inline">
-                        Novo
-                      </span>
-
+                      <span className="hidden sm:inline">Novo</span>
                     </button>
-
                   )}
-
                 </div>
-
               </div>
 
               {/* ============================
@@ -1018,247 +764,144 @@ export default function PainelFuncionarioPage() {
               ============================ */}
 
               {carregando ? (
-
                 <div className="flex flex-col items-center justify-center gap-4 py-20">
-
                   <Loader2 className="w-10 h-10 text-red-400 animate-spin" />
 
                   <p className="text-gray-400">
-                    Carregando{' '}
-                    {config.label.toLowerCase()}
+                    Carregando {config.label.toLowerCase()}
                     ...
                   </p>
-
                 </div>
-
               ) : erro ? (
-
                 /* ============================
                       ERRO
                 ============================ */
 
                 <div className="flex flex-col items-center justify-center gap-4 py-20 text-center px-6">
-
                   <AlertCircle className="w-10 h-10 text-red-400" />
 
-                  <p className="text-white font-bold">
-                    Erro ao carregar dados
-                  </p>
+                  <p className="text-white font-bold">Erro ao carregar dados</p>
 
-                  <p className="text-gray-400 max-w-md">
-                    {erro}
-                  </p>
+                  <p className="text-gray-400 max-w-md">{erro}</p>
 
                   <button
-                    onClick={() =>
-                      carregarDados(
-                        config
-                      )
-                    }
+                    onClick={() => carregarDados(config)}
                     className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg font-bold transition"
                     type="button"
                   >
                     Tentar novamente
                   </button>
-
                 </div>
-
-              ) : dadosFiltrados.length ===
-                0 ? (
-
+              ) : dadosFiltrados.length === 0 ? (
                 /* ============================
                     SEM RESULTADOS
                 ============================ */
 
                 <div className="flex flex-col items-center justify-center gap-4 py-20 text-center px-6">
-
                   <Inbox className="w-10 h-10 text-gray-500" />
 
                   <p className="text-gray-400">
-
                     {busca
                       ? `Nenhum resultado para "${busca}".`
                       : `Nenhum registro de ${config.label.toLowerCase()} encontrado.`}
-
                   </p>
-
                 </div>
-
               ) : (
-
                 /* ============================
                       TABELA
                 ============================ */
 
                 <div className="overflow-x-auto">
-
                   <table className="w-full">
-
                     <thead>
-
                       <tr className="border-b border-red-500/10">
-
-                        {config.colunas.map(
-                          (coluna) => (
-
-                            <th
-                              key={
-                                coluna.header
-                              }
-                              className={`px-6 py-4 text-left text-sm text-gray-400 whitespace-nowrap ${
-                                coluna.className ??
-                                ''
-                              }`}
-                            >
-
-                              {coluna.header}
-
-                            </th>
-
-                          )
-                        )}
+                        {config.colunas.map((coluna) => (
+                          <th
+                            key={coluna.header}
+                            className={`px-6 py-4 text-left text-sm text-gray-400 whitespace-nowrap ${
+                              coluna.className ?? ""
+                            }`}
+                          >
+                            {coluna.header}
+                          </th>
+                        ))}
 
                         <th className="px-6 py-4 text-right text-sm text-gray-400">
                           Ações
                         </th>
-
                       </tr>
-
                     </thead>
 
                     <tbody>
+                      {dadosFiltrados.map((item) => {
+                        const id = paraId(item.id);
 
-                      {dadosFiltrados.map(
-                        (item) => {
+                        return (
+                          <tr
+                            key={id}
+                            onClick={() => router.push(config.rotaDetalhes(id))}
+                            className="border-b border-red-500/5 transition cursor-pointer hover:bg-red-500/10"
+                          >
+                            {config.colunas.map((coluna) => (
+                              <td
+                                key={coluna.header}
+                                className={`px-6 py-4 text-white whitespace-nowrap ${
+                                  coluna.className ?? ""
+                                }`}
+                              >
+                                {coluna.render(item)}
+                              </td>
+                            ))}
 
-                          const id =
-                            paraId(
-                              item.id
-                            );
+                            <td className="px-6 py-4">
+                              <div className="flex items-center justify-end gap-2">
+                                {/* EDITAR */}
 
-                          return (
-
-                            <tr
-                              key={id}
-                              onClick={() =>
-                                router.push(
-                                  config.rotaDetalhes(
-                                    id
-                                  )
-                                )
-                              }
-                              className="border-b border-red-500/5 transition cursor-pointer hover:bg-red-500/10"
-                            >
-
-                              {config.colunas.map(
-                                (
-                                  coluna
-                                ) => (
-
-                                  <td
-                                    key={
-                                      coluna.header
-                                    }
-                                    className={`px-6 py-4 text-white whitespace-nowrap ${
-                                      coluna.className ??
-                                      ''
-                                    }`}
-                                  >
-
-                                    {
-                                      coluna.render(
-                                        item
-                                      )
-                                    }
-
-                                  </td>
-
-                                )
-                              )}
-
-                              <td className="px-6 py-4">
-
-                                <div className="flex items-center justify-end gap-2">
-
-                                  {/* EDITAR */}
-
+                                {config.chave !== "transacoes" && (
                                   <button
-                                    onClick={(
-                                      e
-                                    ) => {
+                                    onClick={(e) => {
                                       e.stopPropagation();
 
-                                      router.push(
-                                        config.rotaEditar(
-                                          id
-                                        )
-                                      );
+                                      router.push(config.rotaEditar(id));
                                     }}
                                     className="p-2 text-gray-400 hover:text-white hover:bg-white/10 rounded-lg transition"
                                     aria-label={`Editar ${config.labelSingular}`}
                                     type="button"
                                   >
-
                                     <Pencil className="w-4 h-4" />
-
                                   </button>
+                                )}
 
-                                  {/* EXCLUIR */}
+                                {/* EXCLUIR */}
 
-                                  <button
-                                    onClick={(
-                                      e
-                                    ) => {
-                                      e.stopPropagation();
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
 
-                                      handleExcluir(
-                                        item
-                                      );
-                                    }}
-                                    disabled={
-                                      excluindoId ===
-                                      id
-                                    }
-                                    className="p-2 text-gray-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition disabled:opacity-50"
-                                    aria-label={`Excluir ${config.labelSingular}`}
-                                    type="button"
-                                  >
-
-                                    {excluindoId ===
-                                    id ? (
-
-                                      <Loader2 className="w-4 h-4 animate-spin" />
-
-                                    ) : (
-
-                                      <Trash2 className="w-4 h-4" />
-
-                                    )}
-
-                                  </button>
-
-                                </div>
-
-                              </td>
-
-                            </tr>
-
-                          );
-                        }
-                      )}
-
+                                    handleExcluir(item);
+                                  }}
+                                  disabled={excluindoId === id}
+                                  className="p-2 text-gray-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition disabled:opacity-50"
+                                  aria-label={`Excluir ${config.labelSingular}`}
+                                  type="button"
+                                >
+                                  {excluindoId === id ? (
+                                    <Loader2 className="w-4 h-4 animate-spin" />
+                                  ) : (
+                                    <Trash2 className="w-4 h-4" />
+                                  )}
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })}
                     </tbody>
-
                   </table>
-
                 </div>
-
               )}
-
             </div>
-
           </div>
-
         </section>
 
         {/* ============================
@@ -1266,19 +909,13 @@ export default function PainelFuncionarioPage() {
         ============================ */}
 
         <footer className="border-t border-red-500/10 px-6 py-8">
-
           <div className="max-w-7xl mx-auto text-center text-gray-500 text-sm">
-
             <p>
               © 2024 ForjaBank. Todos os direitos reservados. | Segurança 24/7
             </p>
-
           </div>
-
         </footer>
-
       </main>
-
     </div>
   );
 }

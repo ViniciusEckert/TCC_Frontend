@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import React, { useState } from 'react';
 import {
   Shield,
@@ -29,6 +29,9 @@ const FORM_INITIAL: FormState = {
 
 export default function CriarAgenciaPage() {
   const router = useRouter();
+    const params = useParams();
+  
+    const funcionarioId = params.id as string;
 
   const [form, setForm] = useState<FormState>(FORM_INITIAL);
   const [loading, setLoading] = useState(false);
@@ -65,7 +68,7 @@ export default function CriarAgenciaPage() {
         endereco: form.endereco.trim(),
       });
 
-      router.push('/funcionarios');
+      router.push(`/funcionarios/${funcionarioId}/dashboard`);
     } catch (err) {
       setError(
         err instanceof Error

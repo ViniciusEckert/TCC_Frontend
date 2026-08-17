@@ -176,7 +176,11 @@ export async function listarAgencias() {
 }
 
 export async function buscarAgencia(id: number) {
-  return request(`/agencia/${id}`);
+  const dados = await request(`/agencia/${id}`);
+
+  console.log("🔥 BUSCAR AGENCIA:", JSON.stringify(dados, null, 2));
+
+  return dados;
 }
 
 export async function criarAgencia(data: {

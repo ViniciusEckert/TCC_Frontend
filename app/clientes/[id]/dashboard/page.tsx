@@ -20,32 +20,54 @@ import {
   X,
   CheckCircle,
   Trash,
+  PieChart,
+  Target,
+  TrendingDown,
+ 
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useParams } from "next/navigation";
-import {
-  buscarContas,
-  type Conta,
-  type TransacaoConta,
-} from "./transferir/actions";
+import { type Conta, type ResumoFinanceiro } from "../../../interfaces/clientes";
+import { getCliente, getResumoCliente, logout } from "./actions";
 import { deleteConta } from "../cadastroConta/actions";
+import AnaliseFinanceiraCliente from "./analiseFinanceiraCliente";
+import { CATEGORIAS_INFO } from "../../lib/categorias";
 
-interface ContaComTransacoes extends Conta {
-  transacoes?: TransacaoConta[];
-}
 
 export default function DashboardPage() {
   const router = useRouter();
   const params = useParams();
   const clienteId = params.id;
 
-  const [contas, setContas] = useState<ContaComTransacoes[]>([]);
+  const [contas, setContas] = useState<Conta[]>([]);
   const [nomeCliente, setNomeCliente] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [saldoVisivel, setSaldoVisivel] = useState(true);
   const [contaSelecionada, setContaSelecionada] = useState(0);
   const [excluindoId, setExcluindoId] = useState<number | null>(null);
+  const [resumo, setResumo] = useState<ResumoFinanceiro | null>(null);
+  const [resumoLoading, setResumoLoading] = useState(true);
+  const [metaEconomia, setMetaEconomia] = useState(200);
+  const [editandoMeta, setEditandoMeta] = useState(false);
+
+  useEffect(() => {
+    const buscarResumo = async () => {
+      try {
+        setResumoLoading(true);
+        const dados = await getResumoCliente(Number(clienteId));
+        setResumo(dados);
+      } catch (err) {
+        console.error("[DASHBOARD] Erro ao buscar resumo:", err);
+      } finally {
+        setResumoLoading(false);
+      }
+    };
+
+    if (clienteId) {
+      buscarResumo();
+    }
+  }, [clienteId]);
 
   // ============================
   // NOTIFICAÇÕES
@@ -53,56 +75,42 @@ export default function DashboardPage() {
 
   const [notificacoesAberta, setNotificacoesAberta] = useState(false);
   const [notificacoesLimpas, setNotificacoesLimpas] = useState<number[]>([]);
+useEffect(() => {
+  const buscarDados = async () => {
+    try {
+      setLoading(true);
+      setError(null);
 
-  useEffect(() => {
-    const buscarDados = async () => {
-      try {
-        setLoading(true);
+      const cliente = await getCliente(Number(clienteId));
 
-        // ============================
-        // BUSCAR CLIENTE
-        // ============================
+      console.log("[DASHBOARD] CLIENTE:", cliente);
 
-        const resCliente = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/cliente/${clienteId}`,
-          {
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${localStorage.getItem("token")}`,
-            },
-          },
-        );
+      setNomeCliente(cliente.nome || "");
 
-        if (resCliente.ok) {
-          const data = await resCliente.json();
-          setNomeCliente(data.nome || "");
-        }
+      const contasCliente = cliente.contas || [];
 
-        // ============================
-        // BUSCAR CONTAS
-        // ============================
+      setContas(contasCliente);
 
-        const resultado = await buscarContas(Number(clienteId));
-
-        if (resultado.sucesso && resultado.contas) {
-          setContas(resultado.contas as ContaComTransacoes[]);
-        } else {
-          setError(resultado.erro || "Erro ao buscar contas");
-        }
-      } catch (err) {
-        setError(
-          err instanceof Error ? err.message : "Erro ao buscar dados",
-        );
-      } finally {
-        setLoading(false);
+      if (contasCliente.length === 0) {
+        setContaSelecionada(0);
       }
-    };
+    } catch (err) {
+      console.error("[DASHBOARD] Erro:", err);
 
-    if (clienteId) {
-      buscarDados();
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Erro ao buscar dados",
+      );
+    } finally {
+      setLoading(false);
     }
-  }, [clienteId]);
+  };
 
+  if (clienteId) {
+    buscarDados();
+  }
+}, [clienteId]);
   // ============================
   // EXCLUIR CONTA
   // ============================
@@ -124,11 +132,26 @@ export default function DashboardPage() {
     const sucesso = await deleteConta(contaId);
 
     setExcluindoId(null);
+if (sucesso) {
+  setContas((prev) => {
+    const novasContas = prev.filter(
+      (conta) => conta.id !== contaId,
+    );
 
-    if (sucesso) {
-      setContas((prev) => prev.filter((c) => c.id !== contaId));
-      setContaSelecionada(0);
-    } else {
+    setContaSelecionada((indiceAtual) => {
+      if (novasContas.length === 0) {
+        return 0;
+      }
+
+      return Math.min(
+        indiceAtual,
+        novasContas.length - 1,
+      );
+    });
+
+    return novasContas;
+  });
+}else {
       alert("Não foi possível excluir a conta. Tente novamente.");
     }
   };
@@ -137,12 +160,9 @@ export default function DashboardPage() {
   // LOGOUT
   // ============================
 
-  const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("clienteId");
-
-    router.push("/login");
-  };
+  const handleLogout = async () => {
+  await logout();
+};
 
   // ============================
   // LOADING
@@ -215,8 +235,8 @@ export default function DashboardPage() {
     ? [...contaAtiva.transacoes]
         .sort(
           (a, b) =>
-            new Date(b.dataTransacao).getTime() -
-            new Date(a.dataTransacao).getTime(),
+            new Date(b.data).getTime() -
+            new Date(a.data).getTime(),
         )
         .slice(0, 8)
     : [];
@@ -239,8 +259,8 @@ export default function DashboardPage() {
     )
     .sort(
       (a, b) =>
-        new Date(b.dataTransacao).getTime() -
-        new Date(a.dataTransacao).getTime(),
+        new Date(b.data).getTime() -
+        new Date(a.data).getTime(),
     )
     .slice(0, 8);
 
@@ -494,7 +514,7 @@ export default function DashboardPage() {
 
                           <p className="text-gray-600 text-xs mt-1">
                             {formatarDataHora(
-                              notificacao.dataTransacao,
+                              notificacao.data,
                             )}
                           </p>
                         </div>
@@ -570,6 +590,8 @@ export default function DashboardPage() {
                 </p>
               </div>
 
+        
+
               <div className="text-right">
                 <p className="text-gray-400 text-sm">
                   Saldo Total
@@ -615,6 +637,12 @@ export default function DashboardPage() {
                   label: "Transferir",
                   color: "from-blue-500/20",
                   rota: `/clientes/${clienteId}/dashboard/transferir`,
+                },
+                {
+                  icon: PieChart,
+                  label: "Análise Financeira",
+                  color: "from-purple-500/20",
+                  rota: `/clientes/${clienteId}/dashboard/analiseFinanceira`,
                 },
                 {
                   icon: Plus,
@@ -840,7 +868,7 @@ export default function DashboardPage() {
 
                             <td className="px-6 py-4 text-gray-400">
                               {formatarDataHora(
-                                transacao.dataTransacao,
+                                transacao.data,
                               )}
                             </td>
 
@@ -893,6 +921,8 @@ export default function DashboardPage() {
             )}
           </div>
         </section>
+
+      <AnaliseFinanceiraCliente contas={contas} />
 
         {/* ============================
             FOOTER
